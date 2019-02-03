@@ -36,8 +36,6 @@ class MSE(object):
 
 class Softmax(object):
     def _softmax(self, X):
-        print(X.shape)
-        print((np.exp(X) / np.sum(np.exp(X), axis=1, keepdims=True)).shape)
         return (np.exp(X) / np.sum(np.exp(X), axis=1, keepdims=True))
     def __init__(self):
         pass
