@@ -38,7 +38,7 @@ class Graph(object):
         self.back_graph = copy.copy(self.graph)
         self.back_graph.append(self.loss)
         for i in range(len(self.back_graph)-1, -1, -1):
-            # print(i, self.back_graph[i])
+            print(i, self.back_graph[i])
             if(i == len(self.back_graph)-1):
                 self.back_graph[i].backward()
             else:

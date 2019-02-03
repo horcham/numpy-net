@@ -20,7 +20,7 @@ class Loss(object):
 
     def backward(self):
         self.dF = self.lossfunc.backward()
-        self.X1.D = self.dF
+        self.D = self.X1.D = self.dF
 
 
 class MSE(object):
@@ -34,6 +34,19 @@ class MSE(object):
     def backward(self):
         return self.Y.value - self.output.value
 
-
+class Softmax(object):
+    def _softmax(self, X):
+        print(X.shape)
+        print((np.exp(X) / np.sum(np.exp(X), axis=1, keepdims=True)).shape)
+        return (np.exp(X) / np.sum(np.exp(X), axis=1, keepdims=True))
+    def __init__(self):
+        pass
+    def forward(self, output, Y):
+        self.output = output
+        self.Y = Y
+        self.loss = - np.sum(Y.value * np.log(self._softmax(output.value) + 1e-6))
+        return self.loss
+    def backward(self):
+        return self._softmax(self.output.value) - self.Y.value
 
 
