@@ -26,6 +26,7 @@ class Op(object):
             self.H = self.operator.forward(self.X1)
         self.output = self.H
         self.value = self.H.value
+        print('output:{}'.format(self.value.shape))
 
     def backward(self, nextop):
         self.nextop = nextop
@@ -77,15 +78,15 @@ class Flatten(object):
 
 
 class Conv2d(object):
-    def __init__(self, padding, stride, pad):
+    def __init__(self, padding = 'same', stride = 1, pad = 0):
         self.padding = padding
         self.stride = stride
         self.pad = pad
     def forward(self, X1, X2):
         self.X = self.X1 = X1
         self.filter = self.X2 = X2
-        N, C, H, W = self.X.shape
-        self.filter_h, self.filter_w, self.filter_c, self.filter_c2 = self.filter.shape
+        N, C, H, W = self.X.value.shape
+        self.filter_h, self.filter_w, self.filter_c, self.filter_c2 = self.filter.value.shape
         if self.padding == 'valid':
             self.padH, self.padW = self.pad, self.pad
         elif self.padding == 'same':
@@ -95,12 +96,13 @@ class Conv2d(object):
             raise ValueError('self.padding value error')
         out_h = (H + 2 * self.padH - self.filter_h) // self.stride + 1
         out_w = (W + 2 * self.padW - self.filter_w) // self.stride + 1
-        colX = im2col(self.X, self.filter, self.stride, self.padH, self.padW)
-        colFilter = np.reshape(self.filter, [-1, self.filter.shape[3]])
+        colX = im2col(self.X.value, self.filter.value, self.stride, self.padH, self.padW)
+        colFilter = np.reshape(self.filter.value, [-1, self.filter.value.shape[3]])
         y = np.dot(colX, colFilter)
         y = np.transpose(y, [0, 2, 1])
         y = y.reshape([y.shape[0], y.shape[1], out_h, out_w])
-        return y
+        return Variable(y, lr=0)
+
     def backward(self, nextop):
         pass
 

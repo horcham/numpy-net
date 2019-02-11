@@ -26,7 +26,8 @@ class Graph(object):
         self.optimizer = optimizer
 
     def forward(self):
-        for g in self.graph:
+        for i, g in enumerate(self.graph):
+            print(i, self.graph[i])
             g.forward()
         self.output = self.graph[-1].output
 
