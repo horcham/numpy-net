@@ -10,7 +10,7 @@ class Loss(object):
         self.lossfunc = lossfunc
 
     def __repr__(self):
-        return "loss:{}".format(self.lossfunc.loss)
+        return "{}, loss:{}".format(self.lossfunc.name, self.lossfunc.loss)
 
     def forward(self, output, Y):
         self.X1 = self.output = output
@@ -20,12 +20,12 @@ class Loss(object):
 
     def backward(self):
         self.dF = self.lossfunc.backward()
-        self.D = self.X1.D = self.dF
+        self.D = self.X1.D = np.mean(self.dF, axis=0, keepdims=True)
 
 
 class MSE(object):
     def __init__(self):
-        pass
+        self.name = 'MSE'
     def forward(self, output, Y):
         self.output = output
         self.Y = Y
@@ -35,10 +35,8 @@ class MSE(object):
         return self.Y.value - self.output.value
 
 class Softmax(object):
-    def _softmax(self, X):
-        return (np.exp(X) / np.sum(np.exp(X), axis=1, keepdims=True))
     def __init__(self):
-        pass
+        self.name = 'Softmax'
     def _softmax(self, X):
         return (np.exp(X) / np.sum(np.exp(X), axis=1, keepdims=True))
     def forward(self, output, Y):

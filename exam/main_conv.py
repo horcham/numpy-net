@@ -42,10 +42,10 @@ if __name__ == '__main__':
 
     add2 = Op(Conv2d(), act1, W2)
     graph.add_op(add2)
-    act2 = Layer(SigmoidActivator(), add2)
-    graph.add_layer(act2)
+    # act2 = Layer(SigmoidActivator(), add2)
+    # graph.add_layer(act2)
 
-    add3 = Op(Conv2d(), act2, W3)
+    add3 = Op(Conv2d(), add2, W3)
     graph.add_op(add3)
     act3 = Layer(SigmoidActivator(), add3)
     graph.add_layer(act3)
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     act4 = Layer(SigmoidActivator(), FC1)
     graph.add_layer(act4)
 
-    FC2 = Op(Dot(), FC1, W5)
+    FC2 = Op(Dot(), act4, W5)
     graph.add_op(FC2)
     act5 = Layer(SigmoidActivator(), FC2)
     graph.add_layer(act5)

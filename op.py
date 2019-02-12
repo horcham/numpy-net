@@ -1,6 +1,6 @@
 import numpy as np
 from variable import *
-from utils.im2col import im2col
+from utils.im_col import im2col, col2im
 
 class Op(object):
     '''
@@ -18,6 +18,8 @@ class Op(object):
         self.X2 = X2
         self.operator = operator
 
+    def __repr__(self):
+        return self.operator.name
 
     def forward(self):
         if self.X2 != None:
@@ -32,49 +34,55 @@ class Op(object):
         self.nextop = nextop
         if self.X2 != None:
             self.X1.D, self.X2.D = self.operator.backward(self.nextop)
-            self.X1.D, self.X2.D = np.mean(self.X1.D, axis=0), np.mean(self.X2.D, axis=0)
-            print('dX1:{}, dx2.D:{}'.format(self.X1.D.shape, self.X2.D.shape))
+            self.X1.D, self.X2.D = np.mean(self.X1.D, axis=0, keepdims=True), np.mean(self.X2.D, axis=0, keepdims=True)
+            self.D = self.X1.D
+            print('D=dX1:{}, dx2:{}'.format(self.X1.D.shape, self.X2.D.shape))
         else:
             self.X1.D = self.operator.backward(self.nextop)
-            self.X1.D = np.mean(self.X1.D, axis=0)
+            self.X1.D = np.mean(self.X1.D, axis=0, keepdims=True)
+            self.D = self.X1.D
+            print('D=dX1:{}'.format(self.X1.D.shape))
             # self.X1.D = self.dX1 * self.nextop.D
 
 class Add(object):
     def __init__(self):
-        pass
+        self.name = 'Add'
     def forward(self, X1, X2):
         self.X1, self.X2 = X1, X2
         return Variable(self.X1.value + self.X2.value, lr=0)
-    def backward(self):
-        return 1, 1
+    def backward(self, nextop):
+        return nextop.D, nextop.D
 
 class Identity(object):
     def __init__(self):
-        pass
+        self.name = 'Identity'
     def forward(self, X):
         self.X1 = X
         return self.X1
-    def backward(self):
-        return 1
+    def backward(self, nextop):
+        return nextop.D
 
 class Dot(object):
     def __init__(self):
-        pass
+        self.name = 'Dot'
     def forward(self, X1, X2):
         self.X1, self.X2 = X1, X2
         return Variable(np.dot(self.X1.value, self.X2.value), lr=0)
     def backward(self, nextop):
-        return np.dot(nextop.D, self.X2.value.T), np.dot(self.X1.value.T, nextop.D)
-        # return self.X2.value, self.X1.value.T
+        meanX1value = np.mean(self.X1.value, axis=0, keepdims=True)
+        return np.dot(nextop.D, self.X2.value.T), np.dot(meanX1value.T, nextop.D)
 
 class Flatten(object):
     def __init__(self):
-        pass
+        self.name = 'Flatten'
     def forward(self, X):
         self.X1 = X
         return Variable(np.reshape(self.X1.value, (self.X1.value.shape[0], -1)), lr=0)
     def backward(self, nextop):
-        return np.reshape(nextop.D, (self.X1.value.shape))
+        print(nextop.D.shape)
+        temp = np.reshape(nextop.D, (1, self.X1.value.shape[1], self.X1.value.shape[2], self.X1.value.shape[3]))
+        print(temp.shape)
+        return temp
 
 
 class Conv2d(object):
@@ -82,6 +90,7 @@ class Conv2d(object):
         self.padding = padding
         self.stride = stride
         self.pad = pad
+        self.name = 'Conv2d'
     def forward(self, X1, X2):
         self.X = self.X1 = X1
         self.filter = self.X2 = X2
@@ -96,7 +105,9 @@ class Conv2d(object):
             raise ValueError('self.padding value error')
         out_h = (H + 2 * self.padH - self.filter_h) // self.stride + 1
         out_w = (W + 2 * self.padW - self.filter_w) // self.stride + 1
+        print(self.X.value.shape)
         colX = im2col(self.X.value, self.filter.value, self.stride, self.padH, self.padW)
+        print(colX.shape)
         colFilter = np.reshape(self.filter.value, [-1, self.filter.value.shape[3]])
         y = np.dot(colX, colFilter)
         y = np.transpose(y, [0, 2, 1])
@@ -104,7 +115,20 @@ class Conv2d(object):
         return Variable(y, lr=0)
 
     def backward(self, nextop):
-        pass
+        _nextD = nextop.D
+        print(_nextD.shape)
+        _colnextD = im2col(_nextD, self.filter.value, self.stride, self.padH, self.padW)
+        _colnextD = np.expand_dims(np.reshape(_colnextD, (_colnextD.shape[1:])).mean(axis=0), axis=1)
+        _colFilter = np.reshape(self.filter.value, [-1, self.filter.value.shape[3]])
+        for k in range(_colFilter.shape[1]):
+            _colSubFilter = np.expand_dims(_colFilter[:, k], axis=1)
+            _bottom_diff = np.dot(_colSubFilter, _colnextD.T)
+            _DsubFilter = np.dot(_colnextD.T, _bottom_diff.T)
+        print(_colnextD.shape)
+        print(_colFilter.shape)
+        print(_colSubFilter.shape)
+        print(_bottom_diff.shape)
+        print(_DsubFilter.shape)
 
 
 

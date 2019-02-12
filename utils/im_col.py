@@ -13,8 +13,24 @@ def im2col(X, filter, stride=1, padH=0, padW=0):
             w_max = w + stride * out_w
             crop = img[:, :, h:h_max:stride, w:w_max:stride]
             crop = crop.reshape([img.shape[0], img.shape[1], -1])
-            cols[:, :, h, :] = crop
+            cols[:, :, h*filter_w+w, :] = crop
     cols = cols.reshape([cols.shape[0], cols.shape[1] * cols.shape[2], -1])
     cols = cols.transpose([0, 2, 1])
     return cols
 
+
+def col2im(X, filter, image_size, stride=1):
+    out_N, out_C, out_H, out_W = image_size
+    filter_h, filter_w, filter_c, filter_c2 = filter.shape
+    img = np.zeros(image_size)
+    weight = np.zeros(image_size)
+
+    X = X.transpose([0, 2, 1])
+    X = X.reshape([X.shape[0], out_C, X.shape[1] / out_C, X.shape[2]])
+    k = 0
+    for h in range(0, img.shape[2] - filter_h + 1, stride):
+        for w in range(0, img.shape[3] - filter_w + 1, stride):
+            img[:, :, h:h + filter_h, w:w + filter_w] += X[:, :, :, k].reshape([X.shape[0], X.shape[1], filter_h, filter_w])
+            weight[:, :, h:h + filter_h, w:w + filter_w] += np.ones(([X.shape[0], X.shape[1], filter_h, filter_w]))
+            k += 1
+    return img / weight

@@ -16,6 +16,9 @@ class Layer(object):
 		self.a = a
 		self.activator = activator
 
+	def __repr__(self):
+		return self.activator.name
+
 	def forward(self):
 		self.Z = self.activator.forward(self.a)
 		self.output = self.Z
@@ -25,11 +28,15 @@ class Layer(object):
 		self.nextop = nextop
 		self.Pz = self.nextop.X1.D    # dF/dZ
 		self.Pa = self.activator.backward(self.Z.value) * self.Pz   # dF/da = dF/dZ * dZ/da
-		self.D = self.Pa
+		self.D = np.mean(self.Pa, axis=0, keepdims=True)
+		print('D:{}'.format(self.D.shape))
 
 
 # rule激活器
 class ReluActivator(object):
+	def __init__(self):
+		self.name = 'Relu'
+
 	def forward(self, X):    # 前向计算，计算输出
 		return Variable(max(0, X.value), lr=0)
 
@@ -38,6 +45,9 @@ class ReluActivator(object):
 
 # IdentityActivator激活器.f(x)=x
 class IdentityActivator(object):
+	def __init__(self):
+		self.name = 'Identity'
+
 	def forward(self, X):   # 前向计算，计算输出
 		return X
 
@@ -46,6 +56,9 @@ class IdentityActivator(object):
 
 #Sigmoid激活器
 class SigmoidActivator(object):
+	def __init__(self):
+		self.name = 'Sigmoid'
+
 	def forward(self, X):
 		return Variable(1.0 / (1.0 + np.exp(-(X.value))), lr=0)
 
@@ -55,6 +68,9 @@ class SigmoidActivator(object):
 
 # tanh激活器
 class TanhActivator(object):
+	def __init__(self):
+		self.name = 'Tanh'
+
 	def forward(self, X):
 		return Variable(2.0 / (1.0 + np.exp(-2 * (X.value))) - 1.0, lr=0)
 
