@@ -28,7 +28,8 @@ class Layer(object):
 		self.nextop = nextop
 		self.Pz = self.nextop.X1.D    # dF/dZ
 		self.Pa = self.activator.backward(self.Z.value) * self.Pz   # dF/da = dF/dZ * dZ/da
-		self.D = np.mean(self.Pa, axis=0, keepdims=True)
+		# self.D = np.mean(self.Pa, axis=0, keepdims=True)
+		self.D = self.Pa
 		print('D:{}'.format(self.D.shape))
 
 
@@ -76,4 +77,7 @@ class TanhActivator(object):
 
 	def backward(self, output):
 		return 1 - output * output
+
+class MaxPooling(object):
+	pass
 

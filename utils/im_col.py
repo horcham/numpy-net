@@ -1,8 +1,7 @@
 import numpy as np
 
-def im2col(X, filter, stride=1, padH=0, padW=0):
+def im2col(X, filter_h, filter_w, stride=1, padH=0, padW=0):
     N, C, H, W = X.shape
-    filter_h, filter_w, filter_c, filter_c2 = filter.shape
     out_h = (H + 2 * padH - filter_h) // stride + 1
     out_w = (W + 2 * padW - filter_w) // stride + 1
     img = np.pad(X, [(0, 0), (0, 0), (padH, padH), (padW, padW)], 'constant')
@@ -19,9 +18,8 @@ def im2col(X, filter, stride=1, padH=0, padW=0):
     return cols
 
 
-def col2im(X, filter, image_size, stride=1):
+def col2im(X, filter_h, filter_w, image_size, stride=1):
     out_N, out_C, out_H, out_W = image_size
-    filter_h, filter_w, filter_c, filter_c2 = filter.shape
     img = np.zeros(image_size)
     weight = np.zeros(image_size)
 
@@ -30,6 +28,8 @@ def col2im(X, filter, image_size, stride=1):
     k = 0
     for h in range(0, img.shape[2] - filter_h + 1, stride):
         for w in range(0, img.shape[3] - filter_w + 1, stride):
+            # print(img[:, :, h:h + filter_h, w:w + filter_w].shape)
+            # print(X[:, :, :, k].shape)
             img[:, :, h:h + filter_h, w:w + filter_w] += X[:, :, :, k].reshape([X.shape[0], X.shape[1], filter_h, filter_w])
             weight[:, :, h:h + filter_h, w:w + filter_w] += np.ones(([X.shape[0], X.shape[1], filter_h, filter_w]))
             k += 1

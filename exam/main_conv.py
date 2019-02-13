@@ -17,17 +17,17 @@ if __name__ == '__main__':
     Y = Variable(onehot(np.random.choice(['a', 'b'], [100, 1])), lr=0)
     print(Y.value.shape)
 
-    W0 = Variable(UniformInit([3, 3, 3, 10]), lr=0.001)
+    W0 = Variable(UniformInit([3, 3, 3, 10]), lr=0.01)
     graph.add_var(W0)
-    W1 = Variable(UniformInit([3, 3, 10, 20]), lr=0.001)
+    W1 = Variable(UniformInit([3, 3, 10, 20]), lr=0.01)
     graph.add_var(W1)
-    W2 = Variable(UniformInit([3, 3, 20, 30]), lr=0.001)
+    W2 = Variable(UniformInit([3, 3, 20, 30]), lr=0.01)
     graph.add_var(W2)
-    W3 = Variable(UniformInit([3, 3, 30, 40]), lr=0.001)
+    W3 = Variable(UniformInit([3, 3, 30, 40]), lr=0.01)
     graph.add_var(W3)
-    W4 = Variable(UniformInit([100000, 10]), lr=0.001)
+    W4 = Variable(UniformInit([100000, 10]), lr=0.01)
     graph.add_var(W4)
-    W5 = Variable(UniformInit([10, 2]), lr=0.001)
+    W5 = Variable(UniformInit([10, 2]), lr=0.01)
     graph.add_var(W5)
 
     add0 = Op(Conv2d(), X, W0)
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     graph.add_optimizer(SGDOptimizer())
 
 
-    for t in range(5):
+    for t in range(10):
         print(t)
         graph.forward()
         graph.calc_loss(Y)
