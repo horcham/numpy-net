@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     conv0 = Op(Conv2d(), X, W0)
     graph.add_op(conv0)
-    act0 = Layer(SigmoidActivator(), conv0)
+    act0 = Layer(ReluActivator(), conv0)
     graph.add_layer(act0)
 
     pool0 = Op(MaxPooling(2,2), act0)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     conv1 = Op(Conv2d(), pool0, W1)
     graph.add_op(conv1)
-    act1 = Layer(SigmoidActivator(), conv1)
+    act1 = Layer(ReluActivator(), conv1)
     graph.add_layer(act1)
 
     pool1 = Op(MaxPooling(2,2), act1)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     conv2 = Op(Conv2d(), pool1, W2)
     graph.add_op(conv2)
-    act2 = Layer(SigmoidActivator(), conv2)
+    act2 = Layer(ReluActivator(), conv2)
     graph.add_layer(act2)
 
     pool2 = Op(MaxPooling(2,2), act2)
@@ -69,7 +69,15 @@ if __name__ == '__main__':
 
     # graph.add_loss(Loss(MSE()))
     graph.add_loss(Loss(Softmax()))
-    graph.add_optimizer(SGDOptimizer())
+
+
+
+    # graph.add_optimizer(SGDOptimizer())
+    # graph.add_optimizer(MomentumOptimizer(0.9))
+    # graph.add_optimizer(AdaGramOptimizer())
+    # graph.add_optimizer(AdaDeltaOptimizer(0.9))
+    # graph.add_optimizer(RMSPropOptimizer(0.9))
+    graph.add_optimizer(AdamOptimizer())
 
 
     for t in range(10):

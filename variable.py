@@ -6,7 +6,11 @@ class Variable(object):
 		self.value = initial
 		self.lr = lr
 		self.D = 0
+		self.DList = []
+		self.m = 0
+		self.V = 0
 
 	def update(self, optimizer):
-		self.value = optimizer.update(self.value, self.D, self.lr)
+		optimizer.update(self)
+
 

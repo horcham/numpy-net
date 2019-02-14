@@ -34,6 +34,7 @@ class Op(object):
         self.nextop = nextop
         if self.X2 != None:
             self.X1.D, self.X2.D = self.operator.backward(self.nextop)
+            self.X2.DList.append(self.X2.D)
             # self.X1.D, self.X2.D = np.mean(self.X1.D, axis=0, keepdims=True), np.mean(self.X2.D, axis=0, keepdims=True)
             self.D = self.X1.D
             print('D=dX1:{}, dx2:{}'.format(self.X1.D.shape, self.X2.D.shape))
