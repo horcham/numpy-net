@@ -13,7 +13,6 @@ from dataprocess import *
 if __name__ == '__main__':
     graph = Graph()
     X = Variable(UniformInit([100, 3, 50, 50]), lr=0)
-    # Y = Variable(UniformInit([1000, 3]), lr=0)
     Y = Variable(onehot(np.random.choice(['a', 'b'], [100, 1])), lr=0)
     print(Y.value.shape)
 
@@ -67,16 +66,8 @@ if __name__ == '__main__':
     act5 = Layer(SigmoidActivator(), FC2)
     graph.add_layer(act5)
 
-    # graph.add_loss(Loss(MSE()))
     graph.add_loss(Loss(Softmax()))
 
-
-
-    # graph.add_optimizer(SGDOptimizer())
-    # graph.add_optimizer(MomentumOptimizer(0.9))
-    # graph.add_optimizer(AdaGramOptimizer())
-    # graph.add_optimizer(AdaDeltaOptimizer(0.9))
-    # graph.add_optimizer(RMSPropOptimizer(0.9))
     graph.add_optimizer(AdamOptimizer())
 
 
