@@ -33,4 +33,4 @@ def col2im(X, filter_h, filter_w, image_size, stride=1):
             img[:, :, h:h + filter_h, w:w + filter_w] += X[:, :, :, k].reshape([X.shape[0], X.shape[1], filter_h, filter_w])
             weight[:, :, h:h + filter_h, w:w + filter_w] += np.ones(([X.shape[0], X.shape[1], filter_h, filter_w]))
             k += 1
-    return img / weight
+    return img / (weight + 1e-6)

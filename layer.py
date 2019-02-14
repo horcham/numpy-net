@@ -1,6 +1,7 @@
 # coding:utf-8
 import numpy as np
 from variable import *
+from utils.im_col import im2col, col2im
 
 class Layer(object):
 	'''
@@ -39,10 +40,12 @@ class ReluActivator(object):
 		self.name = 'Relu'
 
 	def forward(self, X):    # 前向计算，计算输出
-		return Variable(max(0, X.value), lr=0)
+		return Variable(np.maximum(0, X.value), lr=0)
 
 	def backward(self, output):  # 后向计算，计算导数
-		return 1 if output > 0 else 0
+		output[output<0] = 0
+		return output
+		# return 1 if output > 0 else 0
 
 # IdentityActivator激活器.f(x)=x
 class IdentityActivator(object):
@@ -78,6 +81,6 @@ class TanhActivator(object):
 	def backward(self, output):
 		return 1 - output * output
 
-class MaxPooling(object):
-	pass
+
+
 

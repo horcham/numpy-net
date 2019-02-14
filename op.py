@@ -125,6 +125,51 @@ class Conv2d(object):
         return _DX, _DW
 
 
+class MaxPooling(object):
+    def __init__(self, filter_h, filter_w, stride = 2, pad = 0):
+        self.name = 'Maxpooling'
+        self.filter_h = filter_h
+        self.filter_w = filter_w
+        self.stride = stride
+        self.padH = self.padW = pad
+    def forward(self, X):
+        self.X = X
+        print(X.value.shape)
+        N, C, H, W = self.X.value.shape
+        self.out_h = (H + 2 * self.padH - self.filter_h) // self.stride + 1
+        self.out_w = (W + 2 * self.padW - self.filter_w) // self.stride + 1
+        X_col = im2col(self.X.value, filter_h=self.filter_h, filter_w=self.filter_h, \
+                       stride=self.stride, padH=self.padH, padW=self.padW)
+        print(X_col.shape)
+        X_col = X_col.transpose([0, 2, 1])
+        X_col = X_col.reshape([X_col.shape[0], C, X_col.shape[1] / C, X_col.shape[2]])
+        X_col = X_col.reshape([X_col.shape[0] * X_col.shape[1], X_col.shape[2], X_col.shape[3]])
+        X_col = X_col.transpose([0, 2, 1]).reshape([X_col.shape[0] * X_col.shape[2], X_col.shape[1]])
+        self.X_col = X_col
+        print(X_col.shape)
+        self.max_idx = np.argmax(X_col, axis=1)
+        out = X_col[range(X_col.shape[0]), self.max_idx]
+        out = out.reshape([N, C, self.out_h, self.out_w])
+        print(out.shape)
+        return Variable(out, lr=0)
+    def backward(self, nextop):
+        N, C, H, W = self.X.value.shape
+        _nextD = nextop.D
+        _nextD = _nextD.transpose(2,3,0,1).ravel()
+        print(_nextD.shape)
+        _DX_col = np.zeros(self.X_col.shape)
+        _DX_col[range(self.X_col.shape[0]), self.max_idx] = _nextD
+        print(_DX_col.shape)
+        _DX_col = _DX_col.reshape([N, _DX_col.shape[0]/N, _DX_col.shape[1]])
+        print(_DX_col.shape)
+        _DX_col = _DX_col.reshape([N, _DX_col.shape[1]/C, C, _DX_col.shape[2]])
+        print(_DX_col.shape)
+        _DX_col = _DX_col.reshape([N, _DX_col.shape[1], C*_DX_col.shape[3]])
+        print(_DX_col.shape)
+        _DX = col2im(_DX_col, self.filter_h, self.filter_w, self.X.value.shape, stride=self.stride)
+        print(_DX.shape)
+        return _DX
+
 
 
 
