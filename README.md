@@ -4,42 +4,47 @@
 
 ## About numpy-net
 
-Numpy-net is a neural networks framework implemented by numpy. Its coding style is like Gluon of mxnet. It can do derivation automatically via definition of operation's backward function.  Now this framework supports BP network and CNN.
+Numpy-net is a neural networks framework implemented by numpy. 
+Its coding style is like Gluon of mxnet. It can do derivation 
+automatically via definition of operation's backward function.  
+Now this framework supports BP network and CNN.
 
 ---
 
 ## Support
 
+- Variable:  `Variable(np.array, lr=0)`
+ 
 - Initial
-  - Uniform
-  - Normal
+  - Uniform:  `Uniform(shape)`
+  - Normal:  `Normal(shape)`
 
 - Operation
-  - Add
-  - Identity
-  - Dot
-  - Flatten
-  - Conv2d
-  - Maxpooling
+  - Add: `__init__()`, `forward(X1, X2)`
+  - Identity `__init__()`, `forward(X1)`
+  - Dot  `__init__()`, `forward(X1, X2)`
+  - Flatten  `__init__()`, `forward(X1)`
+  - Conv2d   `__init__(padding, stride, pad)`, `forward(X1, X2)` 
+  - Maxpooling  `__init__(filter_h, filter_w, stride, pad)`, `forward(X1)`
 - Activator
-  - Relu
-  - Identity
-  - Sigmoid
-  - Tanh
+  - Relu   `__init__()`, `forward(X1)` 
+  - Identity   `__init__()`, `forward(X1)` 
+  - Sigmoid   `__init__()`, `forward(X1)` 
+  - Tanh   `__init__()`, `forward(X1)` 
 - Loss Function
-  - MSE
-  - Softmax
+  - MSE   `__init__()` 
+  - Softmax   `__init__()`
 - Optimizer
-  - SGD
-  - Momentum
-  - AdaGram
-  - AdaDelta / RMSprop
-  - Adam
+  - SGD    `__init__()`    
+  - Momentum   `__init__(beta1=0.9)`
+  - AdaGram   `__init__()`
+  - AdaDelta / RMSprop   `__init__(beta2=0.999)`
+  - Adam   `__init__(beta1=0.9, beta2=0.999)`
 
 ---
 
 ## Quick Start
-
+---
 ### Requirements
 
 - python2.7
@@ -63,7 +68,7 @@ python main_conv.py
 ---
 
 ## Tutorials
-
+---
 ### Graph
 
 `Graph` is a network definition. During `Graph` 's definition, `Variable`,`Operation`,`Layer`, `Loss Function`, `Optimizer` are just symbol, we can add them into graph.
@@ -71,7 +76,7 @@ python main_conv.py
 ```python
 graph = Graph()		    # Graph initial
 
-X = Variable(UniformInit([1000, 50]), lr=0)								# input data
+X = Variable(UniformInit([1000, 50]), lr=0)		# input data
 Y = Variable(onehot(np.random.choice(['a', 'b'], [1000, 1])), lr=0)     # output data, contain two labels
 
 W0 = Variable(UniformInit([50, 30]), lr=0.01)
@@ -102,10 +107,12 @@ graph.update()			# update the variable in graph.add_var by optimizer
 ```
 
 
-
+---
 ### Variables
 
-`Variable` is similar to `numpy.array`, but it is a class which also contains other attributes like lr(learning rate), D(gradient). Any input and variables should be convert to `Variable` before feeding into network. 
+`Variable` is similar to `numpy.array`, but it is a class which also 
+contains other attributes like lr(learning rate), D(gradient). Any input 
+and variables should be convert to `Variable` before feeding into network. 
 
 ```python
 graph = Graph()
@@ -114,6 +121,147 @@ X = Variable(X, lr=0)	# if X is not trainable, lr=0
 w = Variable(w, lr=1)	# if w is trainable, lr=1, and add it into graph
 graph.add_var(w)
 ```
+
+---
+### Operation
+
+`Operation` is similar to operations of numpy. For example, class Dot is 
+similar to numpy.dot, but it also contains backward funtions, which is used 
+to calculate gradient.
+
+During `graph`'s definition, `Operation` is defined as symbol. 
+
+How to define an `Operation`?
+```python
+op_handler = Op(operation(), X, W)  # operation which need two inputs
+op_handler2 = Op(operation(), X)    # operation which need one inputs
+```
+
+`operation()` : `Dot()`,`Add`,`Conv2d` and so on
+
+`X` : First input, `Variable`, which is not trainable
+
+`W` : Second input, `Variable`, which is trainable
+
+ For example
+```python
+FC0 = Op(Dot(), X, W0)  # Define operation: Dot
+graph.add_op(FC0)     # Add Operation into graph
+```
+
+`Operation` calculates when `graph` begins to forward and backward.
+```python
+graph.forward()  # operation begins forward
+graph.backward() # operation begins backward
+```
+
+---
+### Layer
+Add activations to graph
+
+During `Layer`'s definition, `Layer` is defined as symbol. 
+How to define an `Layer`?
+```python
+layer_handler = Layer(activator(), X)  
+```
+`X` : `Variable`, which is not trainable
+
+
+ For example
+```python
+act0 = Layer(SigmoidActivator(), add0) # Define Layer: Sigmoid activation
+graph.add_layer(act0)   # Add Layer into graph
+```
+
+`Layer` calculates when `graph` begins to forward and backward.
+```python
+graph.forward()  # Layer begins forward
+graph.backward() # Layer begins backward
+```
+
+---
+### Loss Function
+Add Loss Function to graph, it will calculate loss, and begin 
+calculate gradient.
+
+During `Loss`'s definition, `Loss` is defined as symbol. 
+
+How to define an `Loss`?
+```python
+loss_handler = Loss(loss_funtion())  
+```
+`loss_function()` can be `MSE()`, `Softmax`
+
+For example
+```python
+graph.add_loss(Loss(Softmax()))
+```
+
+`Loss` calculates after graph forward, call
+```python
+graph.calc_loss(Y)
+```
+to calculate loss. `Y` is labels of data, `Variable`
+
+After calculating loss, call 
+```python
+graph.backward()
+``` 
+to do backward.
+
+---
+### Optimizer
+Add Optimizer to graph, it will update trainable `Variable`
+after backward.
+
+How to define an `Loss`?
+```python
+Optimizer_handler = Optimizer()  
+```
+`Optimizer()` can be `SGDOptimizer`, `MomentumOptimizer` and so on
+
+For example
+```python
+graph.add_optimizer(AdamOptimizer())
+```
+
+After backward, trainable `Variable` needs to update according 
+its gradient
+```python
+graph.update()
+```
+
+## More
+If you want to define `Operation` or `Layer`, you only need to
+define how this `Operation` or `Layer` forward and backward.Be careful
+that the first input of `Operation` must be untrainable `Variable` and 
+the second input must be trainable
+
+Meanwhile, it is easy for you to define `Optimizer`, `Loss`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
