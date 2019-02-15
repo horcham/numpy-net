@@ -11,9 +11,11 @@ Now this framework supports BP network and CNN.
 
 ---
 
-## Support
+## Support Component
 
-- Variable:  `Variable(np.array, lr=0)`
+- Variable:  
+  - `Variable(np.array, lr=0)`
+  - `Placeholder()`
  
 - Initial
   - Uniform:  `Uniform(shape)`
@@ -26,6 +28,7 @@ Now this framework supports BP network and CNN.
   - Flatten  `__init__()`, `forward(X1)`
   - Conv2d   `__init__(padding, stride, pad)`, `forward(X1, X2)` 
   - Maxpooling  `__init__(filter_h, filter_w, stride, pad)`, `forward(X1)`
+  - Dropout `__init__(p)`, `forward(X1)`
 - Activator
   - Relu   `__init__()`, `forward(X1)` 
   - Identity   `__init__()`, `forward(X1)` 
@@ -44,10 +47,11 @@ Now this framework supports BP network and CNN.
 ---
 
 ## Quick Start
+
 ---
 ### Requirements
 
-- python2.7
+- python 2.7
 - numpy 1.11.3
 
 Get numpy-net
@@ -68,17 +72,19 @@ python main_conv.py
 ---
 
 ## Tutorials
+
 ---
 ### Graph
 
 `Graph` is a network definition. During `Graph` 's definition, `Variable`,`Operation`,`Layer`, `Loss Function`, `Optimizer` are just symbol, we can add them into graph.
 
 ```python
+input = Variable(UniformInit([1000, 50]), lr=0)		# input data
+output = Variable(onehot(np.random.choice(['a', 'b'], [1000, 1])), lr=0)     # output data, contain two labels
+
 graph = Graph()		    # Graph initial
 
-X = Variable(UniformInit([1000, 50]), lr=0)		# input data
-Y = Variable(onehot(np.random.choice(['a', 'b'], [1000, 1])), lr=0)     # output data, contain two labels
-
+X = Placeholder()       # Add Placeholder
 W0 = Variable(UniformInit([50, 30]), lr=0.01)
 graph.add_var(W0)       # Add Variable into graph
 W1 = Variable(UniformInit([30, 2]), lr=0.01)
@@ -100,12 +106,13 @@ graph.add_optimizer(SGDOptimizer())	# add Optimizer
 After the definition, we can train the net
 
 ```python
-graph.forward()			# netword forward
-graph.calc_loss(Y)		# use label Y and calculate loss
+graph.forward(input)			# netword forward
+graph.calc_loss(output)		# use label Y and calculate loss
 graph.backward()		# netword backward and calculate gradient
 graph.update()			# update the variable in graph.add_var by optimizer
 ```
 
+After 
 
 ---
 ### Variables
@@ -121,6 +128,22 @@ X = Variable(X, lr=0)	# if X is not trainable, lr=0
 w = Variable(w, lr=1)	# if w is trainable, lr=1, and add it into graph
 graph.add_var(w)
 ```
+
+### Placeholder
+When definding the graph, we use `Placeholder` to represent input data.
+```python
+X = Placeholder()       # Add Placeholder
+W0 = Variable(UniformInit([50, 30]), lr=0.01)
+FC0 = Op(Dot(), X, W0)
+graph.add_op(FC0)     # Add Operation into graph
+```
+After definition, the graph begin to train, input data(`Variable`) and output data(`Variable`) 
+were feed into graph by
+```python
+graph.forward(input)			# netword forward
+graph.calc_loss(output)		# use label Y and calculate loss
+```
+and `Placeholder` is replaced by `Variable`
 
 ---
 ### Operation

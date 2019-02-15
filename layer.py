@@ -20,8 +20,8 @@ class Layer(object):
 	def __repr__(self):
 		return self.activator.name
 
-	def forward(self):
-		self.Z = self.activator.forward(self.a)
+	def forward(self, if_train=True):
+		self.Z = self.activator.forward(self.a, if_train)
 		self.output = self.Z
 		self.value = self.Z.value
 
@@ -39,7 +39,7 @@ class ReluActivator(object):
 	def __init__(self):
 		self.name = 'Relu'
 
-	def forward(self, X):    # 前向计算，计算输出
+	def forward(self, X, if_train):    # 前向计算，计算输出
 		return Variable(np.maximum(0, X.value), lr=0)
 
 	def backward(self, output):  # 后向计算，计算导数
@@ -53,7 +53,7 @@ class IdentityActivator(object):
 	def __init__(self):
 		self.name = 'Identity'
 
-	def forward(self, X):   # 前向计算，计算输出
+	def forward(self, X, if_train):   # 前向计算，计算输出
 		return X
 
 	def backward(self, output):   # 后向计算，计算导数
@@ -64,7 +64,7 @@ class SigmoidActivator(object):
 	def __init__(self):
 		self.name = 'Sigmoid'
 
-	def forward(self, X):
+	def forward(self, X, if_train):
 		return Variable(1.0 / (1.0 + np.exp(-(X.value))), lr=0)
 
 	def backward(self, output):
@@ -76,7 +76,7 @@ class TanhActivator(object):
 	def __init__(self):
 		self.name = 'Tanh'
 
-	def forward(self, X):
+	def forward(self, X, if_train):
 		return Variable(2.0 / (1.0 + np.exp(-2 * (X.value))) - 1.0, lr=0)
 
 	def backward(self, output):

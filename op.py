@@ -21,11 +21,11 @@ class Op(object):
     def __repr__(self):
         return self.operator.name
 
-    def forward(self):
+    def forward(self, if_train=True):
         if self.X2 != None:
-            self.H = self.operator.forward(self.X1, self.X2)
+            self.H = self.operator.forward(self.X1, self.X2, if_train)
         else:
-            self.H = self.operator.forward(self.X1)
+            self.H = self.operator.forward(self.X1, if_train)
         self.output = self.H
         self.value = self.H.value
         print('output:{}'.format(self.value.shape))
@@ -48,7 +48,7 @@ class Op(object):
 class Add(object):
     def __init__(self):
         self.name = 'Add'
-    def forward(self, X1, X2):
+    def forward(self, X1, X2, if_train):
         self.X1, self.X2 = X1, X2
         return Variable(self.X1.value + self.X2.value, lr=0)
     def backward(self, nextop):
@@ -57,7 +57,7 @@ class Add(object):
 class Identity(object):
     def __init__(self):
         self.name = 'Identity'
-    def forward(self, X):
+    def forward(self, X, if_train):
         self.X1 = X
         return self.X1
     def backward(self, nextop):
@@ -66,7 +66,7 @@ class Identity(object):
 class Dot(object):
     def __init__(self):
         self.name = 'Dot'
-    def forward(self, X1, X2):
+    def forward(self, X1, X2, if_train):
         self.X1, self.X2 = X1, X2
         return Variable(np.dot(self.X1.value, self.X2.value), lr=0)
     def backward(self, nextop):
@@ -77,7 +77,7 @@ class Dot(object):
 class Flatten(object):
     def __init__(self):
         self.name = 'Flatten'
-    def forward(self, X):
+    def forward(self, X, if_train):
         self.X1 = X
         return Variable(np.reshape(self.X1.value, (self.X1.value.shape[0], -1)), lr=0)
     def backward(self, nextop):
@@ -91,7 +91,7 @@ class Conv2d(object):
         self.stride = stride
         self.pad = pad
         self.name = 'Conv2d'
-    def forward(self, X1, X2):
+    def forward(self, X1, X2, if_train):
         self.X = self.X1 = X1
         self.filter = self.X2 = X2
         N, C, H, W = self.X.value.shape
@@ -133,7 +133,7 @@ class MaxPooling(object):
         self.filter_w = filter_w
         self.stride = stride
         self.padH = self.padW = pad
-    def forward(self, X):
+    def forward(self, X, if_train):
         self.X = X
         print(X.value.shape)
         N, C, H, W = self.X.value.shape
@@ -171,6 +171,20 @@ class MaxPooling(object):
         print(_DX.shape)
         return _DX
 
+
+class Dropout(object):
+    def __init__(self, p):
+        self.name = 'Dropout'
+        self.p = p
+    def forward(self, X, if_train):
+        if if_train:
+            self.u1 = np.random.binomial(1, self.p, X.value.shape) / self.p
+            return Variable(X.value * self.u1, lr=0)
+        else:
+            return X
+    def backward(self, nextop):
+        _nextD = nextop.D
+        return _nextD * self.u1
 
 
 

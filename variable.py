@@ -13,4 +13,7 @@ class Variable(object):
 	def update(self, optimizer):
 		optimizer.update(self)
 
+class Placeholder(object):
+	def __init__(self):
+		pass
 

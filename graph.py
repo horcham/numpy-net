@@ -25,8 +25,10 @@ class Graph(object):
     def add_optimizer(self, optimizer):
         self.optimizer = optimizer
 
-    def forward(self):
+    def forward(self, X):
         for i, g in enumerate(self.graph):
+            if i == 0:
+                self.graph[i].X1 = X
             print(i, self.graph[i])
             g.forward()
         self.output = self.graph[-1].output
@@ -49,6 +51,13 @@ class Graph(object):
         for var in self.variable:
             var.update(self.optimizer)
 
+    def predict(self, X):
+        for i, g in enumerate(self.graph):
+            if i == 0:
+                self.graph[i].X1 = X
+            print(i, self.graph[i])
+            g.forward(if_train=False)
+        self.output = self.graph[-1].output
 
 
 

@@ -11,11 +11,11 @@ from graph import *
 from dataprocess import *
 
 if __name__ == '__main__':
-    graph = Graph()
-    X = Variable(UniformInit([100, 3, 50, 50]), lr=0)
-    Y = Variable(onehot(np.random.choice(['a', 'b'], [100, 1])), lr=0)
-    print(Y.value.shape)
+    input = Variable(UniformInit([100, 3, 50, 50]), lr=0)
+    output = Variable(onehot(np.random.choice(['a', 'b'], [100, 1])), lr=0)
 
+    graph = Graph()
+    X = Placeholder()
     W0 = Variable(UniformInit([3, 3, 3, 10]), lr=0.01)
     graph.add_var(W0)
     W1 = Variable(UniformInit([3, 3, 10, 20]), lr=0.01)
@@ -73,8 +73,8 @@ if __name__ == '__main__':
 
     for t in range(10):
         print(t)
-        graph.forward()
-        graph.calc_loss(Y)
+        graph.forward(input)
+        graph.calc_loss(output)
         print(graph.loss)
         graph.backward()
         graph.update()
