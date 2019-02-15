@@ -28,7 +28,7 @@ class Op(object):
             self.H = self.operator.forward(self.X1, if_train)
         self.output = self.H
         self.value = self.H.value
-        print('output:{}'.format(self.value.shape))
+        # print('output:{}'.format(self.value.shape))
 
     def backward(self, nextop):
         self.nextop = nextop
@@ -37,12 +37,12 @@ class Op(object):
             self.X2.DList.append(self.X2.D)
             # self.X1.D, self.X2.D = np.mean(self.X1.D, axis=0, keepdims=True), np.mean(self.X2.D, axis=0, keepdims=True)
             self.D = self.X1.D
-            print('D=dX1:{}, dx2:{}'.format(self.X1.D.shape, self.X2.D.shape))
+            # print('D=dX1:{}, dx2:{}'.format(self.X1.D.shape, self.X2.D.shape))
         else:
             self.X1.D = self.operator.backward(self.nextop)
             # self.X1.D = np.mean(self.X1.D, axis=0, keepdims=True)
             self.D = self.X1.D
-            print('D=dX1:{}'.format(self.X1.D.shape))
+            # print('D=dX1:{}'.format(self.X1.D.shape))
             # self.X1.D = self.dX1 * self.nextop.D
 
 class Add(object):
@@ -135,40 +135,30 @@ class MaxPooling(object):
         self.padH = self.padW = pad
     def forward(self, X, if_train):
         self.X = X
-        print(X.value.shape)
         N, C, H, W = self.X.value.shape
         self.out_h = (H + 2 * self.padH - self.filter_h) // self.stride + 1
         self.out_w = (W + 2 * self.padW - self.filter_w) // self.stride + 1
         X_col = im2col(self.X.value, filter_h=self.filter_h, filter_w=self.filter_h, \
                        stride=self.stride, padH=self.padH, padW=self.padW)
-        print(X_col.shape)
         X_col = X_col.transpose([0, 2, 1])
         X_col = X_col.reshape([X_col.shape[0], C, X_col.shape[1] / C, X_col.shape[2]])
         X_col = X_col.reshape([X_col.shape[0] * X_col.shape[1], X_col.shape[2], X_col.shape[3]])
         X_col = X_col.transpose([0, 2, 1]).reshape([X_col.shape[0] * X_col.shape[2], X_col.shape[1]])
         self.X_col = X_col
-        print(X_col.shape)
         self.max_idx = np.argmax(X_col, axis=1)
         out = X_col[range(X_col.shape[0]), self.max_idx]
         out = out.reshape([N, C, self.out_h, self.out_w])
-        print(out.shape)
         return Variable(out, lr=0)
     def backward(self, nextop):
         N, C, H, W = self.X.value.shape
         _nextD = nextop.D
         _nextD = _nextD.transpose(2,3,0,1).ravel()
-        print(_nextD.shape)
         _DX_col = np.zeros(self.X_col.shape)
         _DX_col[range(self.X_col.shape[0]), self.max_idx] = _nextD
-        print(_DX_col.shape)
         _DX_col = _DX_col.reshape([N, _DX_col.shape[0]/N, _DX_col.shape[1]])
-        print(_DX_col.shape)
         _DX_col = _DX_col.reshape([N, _DX_col.shape[1]/C, C, _DX_col.shape[2]])
-        print(_DX_col.shape)
         _DX_col = _DX_col.reshape([N, _DX_col.shape[1], C*_DX_col.shape[3]])
-        print(_DX_col.shape)
         _DX = col2im(_DX_col, self.filter_h, self.filter_w, self.X.value.shape, stride=self.stride)
-        print(_DX.shape)
         return _DX
 
 
@@ -185,6 +175,51 @@ class Dropout(object):
     def backward(self, nextop):
         _nextD = nextop.D
         return _nextD * self.u1
+
+class BatchNorm(object):
+    def __init__(self, gamma, beta):
+        self.name = 'BatchNorm'
+        self.gamma = gamma
+        self.beta = beta
+        self.bn_mu = 0
+        self.bn_var = 0
+    def forward(self, X, if_train):
+        if if_train:
+            self.X = X
+            self.mu = np.mean(X.value, axis=0)
+            self.var = np.var(X.value, axis=0)
+            self.X_norm = (X.value - self.mu)/ np.sqrt(self.var + 1e-7)
+            self.out = self.gamma.value * self.X_norm + self.beta.value
+
+            self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
+            self.bn_var = self.var * 0.1 + self.bn_var * 0.9
+
+            return Variable(self.out, lr=0)
+        else:
+            self.X = X
+            self.mu = np.mean(X.value, axis=0)
+            self.var = np.var(X.value, axis=0)
+            self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
+            self.bn_var = self.var * 0.1 + self.bn_var * 0.9
+            self.out = (self.X.value - self.bn_mu) / np.sqrt(self.bn_mu + 1e-7)
+            return Variable(self.out, lr=0)
+
+    def backward(self, nextop):
+        _nextD = nextop.D
+        dhatX = _nextD * self.gamma.value
+        dvar = np.sum(dhatX * (self.X.value - self.mu), axis=0) * -1.0/2 * (self.var + 1e-7)**(-3.0/2)
+        dmu = np.sum(dhatX * (-1.0 / np.sqrt(self.var + 1e-7)), axis=0) + \
+              dvar * np.mean(-2 * (self.X.value - self.mu), axis=0)
+        dX = dhatX * 1.0 / np.sqrt(self.var + 1e-7) + \
+             dvar * 2.0 * (self.X.value - self.mu) / self.X.value.shape[0] + \
+             dmu * 1.0 / self.X.value.shape[0]
+        dgamma = np.sum(_nextD * dhatX, axis=0)
+        dbeta = np.sum(_nextD, axis=0)
+        self.gamma.D = dgamma
+        self.beta.D = dbeta
+        return dX
+
+
 
 
 

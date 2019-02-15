@@ -29,7 +29,7 @@ class Graph(object):
         for i, g in enumerate(self.graph):
             if i == 0:
                 self.graph[i].X1 = X
-            print(i, self.graph[i])
+            # print(i, self.graph[i])
             g.forward()
         self.output = self.graph[-1].output
 
@@ -41,7 +41,7 @@ class Graph(object):
         self.back_graph = copy.copy(self.graph)
         self.back_graph.append(self.loss)
         for i in range(len(self.back_graph)-1, -1, -1):
-            print(i, self.back_graph[i])
+            # print(i, self.back_graph[i])
             if(i == len(self.back_graph)-1):
                 self.back_graph[i].backward()
             else:
@@ -55,7 +55,7 @@ class Graph(object):
         for i, g in enumerate(self.graph):
             if i == 0:
                 self.graph[i].X1 = X
-            print(i, self.graph[i])
+            # print(i, self.graph[i])
             g.forward(if_train=False)
         self.output = self.graph[-1].output
 

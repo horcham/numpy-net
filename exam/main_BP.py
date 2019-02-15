@@ -55,6 +55,7 @@ if __name__ == '__main__':
     graph.add_optimizer(SGDOptimizer())
 
 
+    batch =
     for t in range(5):
         print(t)
         graph.forward(input)

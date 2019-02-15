@@ -31,7 +31,7 @@ class Layer(object):
 		self.Pa = self.activator.backward(self.Z.value) * self.Pz   # dF/da = dF/dZ * dZ/da
 		# self.D = np.mean(self.Pa, axis=0, keepdims=True)
 		self.D = self.Pa
-		print('D:{}'.format(self.D.shape))
+		# print('D:{}'.format(self.D.shape))
 
 
 # rule激活器

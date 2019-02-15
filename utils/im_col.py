@@ -1,4 +1,8 @@
 import numpy as np
+import sys
+sys.path.append('../')
+from op import *
+from variable import *
 
 def im2col(X, filter_h, filter_w, stride=1, padH=0, padW=0):
     N, C, H, W = X.shape
@@ -34,3 +38,4 @@ def col2im(X, filter_h, filter_w, image_size, stride=1):
             weight[:, :, h:h + filter_h, w:w + filter_w] += np.ones(([X.shape[0], X.shape[1], filter_h, filter_w]))
             k += 1
     return img / (weight + 1e-6)
+

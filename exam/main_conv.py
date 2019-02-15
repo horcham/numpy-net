@@ -28,10 +28,21 @@ if __name__ == '__main__':
     graph.add_var(W4)
     W5 = Variable(UniformInit([10, 2]), lr=0.01)
     graph.add_var(W5)
+    g0, bt0 = Variable(np.random.random(), lr=0.01), Variable(np.random.random(), lr=0.01)
+    graph.add_var(g0)
+    graph.add_var(bt0)
+    g1, bt1 = Variable(np.random.random(), lr=0.01), Variable(np.random.random(), lr=0.01)
+    graph.add_var(g1)
+    graph.add_var(bt1)
+    g2, bt2 = Variable(np.random.random(), lr=0.01), Variable(np.random.random(), lr=0.01)
+    graph.add_var(g2)
+    graph.add_var(bt2)
 
     conv0 = Op(Conv2d(), X, W0)
     graph.add_op(conv0)
-    act0 = Layer(ReluActivator(), conv0)
+    bn0 = Op(BatchNorm(g0, bt0), conv0)
+    graph.add_op(bn0)
+    act0 = Layer(ReluActivator(), bn0)
     graph.add_layer(act0)
 
     pool0 = Op(MaxPooling(2,2), act0)
@@ -39,7 +50,9 @@ if __name__ == '__main__':
 
     conv1 = Op(Conv2d(), pool0, W1)
     graph.add_op(conv1)
-    act1 = Layer(ReluActivator(), conv1)
+    bn1 = Op(BatchNorm(g1, bt1), conv1)
+    graph.add_op(bn1)
+    act1 = Layer(ReluActivator(), bn1)
     graph.add_layer(act1)
 
     pool1 = Op(MaxPooling(2,2), act1)
@@ -47,7 +60,9 @@ if __name__ == '__main__':
 
     conv2 = Op(Conv2d(), pool1, W2)
     graph.add_op(conv2)
-    act2 = Layer(ReluActivator(), conv2)
+    bn2 = Op(BatchNorm(g2, bt2), conv2)
+    graph.add_op(bn2)
+    act2 = Layer(ReluActivator(), bn2)
     graph.add_layer(act2)
 
     pool2 = Op(MaxPooling(2,2), act2)
@@ -67,17 +82,18 @@ if __name__ == '__main__':
     graph.add_layer(act5)
 
     graph.add_loss(Loss(Softmax()))
-
     graph.add_optimizer(AdamOptimizer())
 
 
-    for t in range(10):
-        print(t)
-        graph.forward(input)
-        graph.calc_loss(output)
+    batch = miniBatch(input, output, batch_size=10)
+    for epoch in range(10):
+        print(epoch)
+        for batch_x, batch_y in batch:
+            graph.forward(batch_x)
+            graph.calc_loss(batch_y)
+            graph.backward()
+            graph.update()
         print(graph.loss)
-        graph.backward()
-        graph.update()
 
 
 

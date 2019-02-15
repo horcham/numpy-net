@@ -29,6 +29,7 @@ Now this framework supports BP network and CNN.
   - Conv2d   `__init__(padding, stride, pad)`, `forward(X1, X2)` 
   - Maxpooling  `__init__(filter_h, filter_w, stride, pad)`, `forward(X1)`
   - Dropout `__init__(p)`, `forward(X1)`
+  - BatchNorm `__init__(gamma, beta)`, `forward(X1)`
 - Activator
   - Relu   `__init__()`, `forward(X1)` 
   - Identity   `__init__()`, `forward(X1)` 
@@ -177,6 +178,42 @@ graph.add_op(FC0)     # Add Operation into graph
 graph.forward()  # operation begins forward
 graph.backward() # operation begins backward
 ```
+
+#### Dropout
+`Dropout` is an `Op`, we always add it before fully connected operation. We only need
+to define `Dropout` in graph:
+```python
+add0 = Op(Dot(), X, W0)
+graph.add_op(add0)
+dp0 = Op(Dropout(0.3), add0)
+graph.add_op(dp0)
+act0 = Layer(SigmoidActivator(), dp0)
+graph.add_layer(act0)
+```
+
+
+#### BatchNorm
+`BatchNorm` is an `Op`, we always add it before `Layer`. Before define `BatchNorm`,
+we should first define `gamma` and `beta` as trainable `Variable`, and add them into
+ graph by `graph.add_var`:
+```python
+g0, bt0 = Variable(np.random.random(), lr=0.01), Variable(np.random.random(), lr=0.01)
+graph.add_var(g0)
+graph.add_var(bt0)
+```
+
+and define `BarchNorm` in graph:
+```python
+conv0 = Op(Conv2d(), X, W0)
+graph.add_op(conv0)
+bn0 = Op(BatchNorm(g0, bt0), conv0)
+graph.add_op(bn0)
+act0 = Layer(ReluActivator(), bn0)
+graph.add_layer(act0)
+```
+After definition of graph, when `graph.backward` called, `gamma` and `beta` will be trained
+
+
 
 ---
 ### Layer
