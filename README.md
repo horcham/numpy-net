@@ -1,8 +1,8 @@
-# numpy-net
+# numpynet
 
 
 
-## About numpy-net
+## About numpynet
 
 Numpy-net is a neural networks framework implemented by numpy. 
 Its coding style is like Gluon of mxnet. It can do derivation 
@@ -44,7 +44,10 @@ Now this framework supports BP network and CNN.
   - AdaGram   `__init__()`
   - AdaDelta / RMSprop   `__init__(beta2=0.999)`
   - Adam   `__init__(beta1=0.9, beta2=0.999)`
-
+- Models
+  - LeNet 
+- Examples
+  - mnist
 ---
 
 ## Quick Start
@@ -55,11 +58,15 @@ Now this framework supports BP network and CNN.
 - python 2.7
 - numpy 1.11.3
 
-Get numpy-net
+Get numpynet
 
 ```python
 git clone https://github.com/horcham/numpy-net.git
-cd numpy-net
+python setup.py install
+```
+and you can import `numpynet` and play
+```python
+import numpynet as nn
 ```
 
 There are some demos, `exam/main_BP` is a implement of BP, `exam/main_conv` is a implement of CNN, you can run them and have fun:
