@@ -33,17 +33,12 @@ class Op(object):
     def backward(self, nextop):
         self.nextop = nextop
         if self.X2 != None:
-            self.X1.D, self.X2.D = self.operator.backward(self.nextop)
-            self.X2.DList.append(self.X2.D)
-            # self.X1.D, self.X2.D = np.mean(self.X1.D, axis=0, keepdims=True), np.mean(self.X2.D, axis=0, keepdims=True)
+            self.operator.backward(self.nextop)
             self.D = self.X1.D
-            # print('D=dX1:{}, dx2:{}'.format(self.X1.D.shape, self.X2.D.shape))
+
         else:
-            self.X1.D = self.operator.backward(self.nextop)
-            # self.X1.D = np.mean(self.X1.D, axis=0, keepdims=True)
+            self.operator.backward(self.nextop)
             self.D = self.X1.D
-            # print('D=dX1:{}'.format(self.X1.D.shape))
-            # self.X1.D = self.dX1 * self.nextop.D
 
 class Add(object):
     def __init__(self):
@@ -52,7 +47,8 @@ class Add(object):
         self.X1, self.X2 = X1, X2
         return Variable(self.X1.value + self.X2.value, lr=0)
     def backward(self, nextop):
-        return nextop.D, nextop.D
+        self.X1.D = nextop.D
+        self.X2.D = nextop.D
 
 class Identity(object):
     def __init__(self):
@@ -61,18 +57,18 @@ class Identity(object):
         self.X1 = X
         return self.X1
     def backward(self, nextop):
-        return nextop.D
+        self.X1.D = nextop.D
 
 class Dot(object):
     def __init__(self):
         self.name = 'Dot'
     def forward(self, X1, X2, if_train):
-        self.X1, self.X2 = X1, X2
-        return Variable(np.dot(self.X1.value, self.X2.value), lr=0)
+        self.X1, self.w, self.b = X1, X2[0], X2[1]
+        return Variable(np.dot(self.X1.value, self.w.value) + self.b.value.T, lr=0)
     def backward(self, nextop):
-        # meanX1value = np.mean(self.X1.value, axis=0, keepdims=True)
-        # return np.dot(nextop.D, self.X2.value.T), np.dot(meanX1value.T, nextop.D)
-        return np.dot(nextop.D, self.X2.value.T), np.dot(self.X1.value.T, nextop.D)
+        self.X1.D = np.dot(nextop.D, self.w.value.T)
+        self.w.D = np.dot(self.X1.value.T, nextop.D)
+        self.b.D = np.mean(nextop.D, axis=0, keepdims=True).T
 
 class Flatten(object):
     def __init__(self):
@@ -81,8 +77,7 @@ class Flatten(object):
         self.X1 = X
         return Variable(np.reshape(self.X1.value, (self.X1.value.shape[0], -1)), lr=0)
     def backward(self, nextop):
-        # return np.reshape(nextop.D, (1, self.X1.value.shape[1], self.X1.value.shape[2], self.X1.value.shape[3]))
-        return np.reshape(nextop.D, self.X1.value.shape)
+        self.X1.D = np.reshape(nextop.D, self.X1.value.shape)
 
 
 class Conv2d(object):
@@ -93,7 +88,8 @@ class Conv2d(object):
         self.name = 'Conv2d'
     def forward(self, X1, X2, if_train):
         self.X = self.X1 = X1
-        self.filter = self.X2 = X2
+        self.filter = self.X2_0 = X2[0]
+        self.b = self.X2_0 = X2[1]
         N, C, H, W = self.X.value.shape
         self.filter_h, self.filter_w, self.filter_c, self.filter_c2 = self.filter.value.shape
         if self.padding == 'valid':
@@ -108,6 +104,9 @@ class Conv2d(object):
         colX = im2col(self.X.value, self.filter.value.shape[0], self.filter.value.shape[1], self.stride, self.padH, self.padW)
         colFilter = np.reshape(self.filter.value, [-1, self.filter.value.shape[3]])
         y = np.dot(colX, colFilter)
+        cols = y.shape[1]
+        y = np.reshape(y, [N*cols, self.filter_c2]) + self.b.value.T
+        y = np.reshape(y, [N, cols, self.filter_c2])
         y = np.transpose(y, [0, 2, 1])
         y = y.reshape([y.shape[0], y.shape[1], self.out_h, self.out_w])
         return Variable(y, lr=0)
@@ -123,7 +122,10 @@ class Conv2d(object):
         _DX_col = np.dot(W_reshape.T, _nextD_reshape)
         _DX_col = _DX_col.T.reshape([self.X1.value.shape[0], _DX_col.shape[1]/self.X1.value.shape[0], _DX_col.shape[0]])
         _DX = col2im(_DX_col, self.filter_h, self.filter_w, self.X1.value.shape)
-        return _DX, _DW
+
+        self.X1.D = _DX
+        self.filter.D = _DW
+        self.b.D = np.sum(_nextD, axis=(0, 2, 3)).reshape(self.filter_c2, -1)
 
 
 class MaxPooling(object):
@@ -149,6 +151,7 @@ class MaxPooling(object):
         out = X_col[range(X_col.shape[0]), self.max_idx]
         out = out.reshape([N, C, self.out_h, self.out_w])
         return Variable(out, lr=0)
+
     def backward(self, nextop):
         N, C, H, W = self.X.value.shape
         _nextD = nextop.D
@@ -159,7 +162,7 @@ class MaxPooling(object):
         _DX_col = _DX_col.reshape([N, _DX_col.shape[1]/C, C, _DX_col.shape[2]])
         _DX_col = _DX_col.reshape([N, _DX_col.shape[1], C*_DX_col.shape[3]])
         _DX = col2im(_DX_col, self.filter_h, self.filter_w, self.X.value.shape, stride=self.stride)
-        return _DX
+        self.X.D = _DX
 
 
 class Dropout(object):
@@ -167,6 +170,7 @@ class Dropout(object):
         self.name = 'Dropout'
         self.p = p
     def forward(self, X, if_train):
+        self.X1 = X
         if if_train:
             self.u1 = np.random.binomial(1, self.p, X.value.shape) / self.p
             return Variable(X.value * self.u1, lr=0)
@@ -174,7 +178,7 @@ class Dropout(object):
             return X
     def backward(self, nextop):
         _nextD = nextop.D
-        return _nextD * self.u1
+        self.X1.D = _nextD * self.u1
 
 class BatchNorm(object):
     def __init__(self, gamma, beta):
@@ -217,7 +221,7 @@ class BatchNorm(object):
         dbeta = np.sum(_nextD, axis=0)
         self.gamma.D = dgamma
         self.beta.D = dbeta
-        return dX
+        self.X.D = dX
 
 
 
