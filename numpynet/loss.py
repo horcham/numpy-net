@@ -45,7 +45,7 @@ class Softmax(object):
     def _softmax(self, X):
         max_X = np.max(X, axis=1, keepdims=True) + 1e-6
         # print(np.exp(X / max_X) / (np.sum(np.exp(X / max_X), axis=1, keepdims=True) + 1e-6)[0])
-        return np.exp(X / max_X) / (np.sum(np.exp(X / max_X), axis=1, keepdims=True) + 1e-6)
+        return np.exp(X - max_X) / (np.sum(np.exp(X - max_X), axis=1, keepdims=True) + 1e-6)
     def forward(self, output, Y):
         self.output = output
         self.Y = Y

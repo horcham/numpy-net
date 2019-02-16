@@ -2,7 +2,7 @@ import numpy as np
 import numpynet as nn
 
 class LeNet(object):
-    def __init__(self, imagesize, faltten_size, num_labels, lr=1e-4):
+    def __init__(self, imagesize, faltten_size, num_labels, lr=1e-3):
 
         self.N, self.C, self.W, self.H = imagesize
         self.num_labels = num_labels

@@ -70,12 +70,12 @@ and you can import `numpynet` and play
 import numpynet as nn
 ```
 
-There are some demos, `exam/main_BP` is a implement of BP, `exam/main_conv` is a implement of CNN, you can run them and have fun:
+There are some demos, `examples/mnist.py` is a demo that solving digital 
+classification by Lenet. you can run them and have fun:
 
 ```
-cd exam
-python main_BP.py  
-python main_conv.py
+cd examples
+python mnist.py  
 ```
 
 ---
