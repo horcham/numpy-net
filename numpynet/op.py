@@ -32,13 +32,8 @@ class Op(object):
 
     def backward(self, nextop):
         self.nextop = nextop
-        if self.X2 != None:
-            self.operator.backward(self.nextop)
-            self.D = self.X1.D
-
-        else:
-            self.operator.backward(self.nextop)
-            self.D = self.X1.D
+        self.operator.backward(self.nextop)
+        self.D = self.X1.D
 
 class Add(object):
     def __init__(self):

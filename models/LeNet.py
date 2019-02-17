@@ -2,7 +2,7 @@ import numpy as np
 import numpynet as nn
 
 class LeNet(object):
-    def __init__(self, imagesize, faltten_size, num_labels, lr=1e-3):
+    def __init__(self, imagesize, flatten_size, num_labels, lr=1e-3):
 
         self.N, self.C, self.W, self.H = imagesize
         self.num_labels = num_labels
@@ -18,7 +18,7 @@ class LeNet(object):
         self.graph.add_var(W1)
         b1 = nn.Variable(nn.UniformInit([64, 1]), lr=lr)
         self.graph.add_var(b1)
-        WFC0 = nn.Variable(nn.UniformInit([faltten_size, 1024]), lr=lr)
+        WFC0 = nn.Variable(nn.UniformInit([flatten_size, 1024]), lr=lr)
         self.graph.add_var(WFC0)
         bFC0 = nn.Variable(nn.UniformInit([1024, 1]), lr=lr)
         self.graph.add_var(bFC0)
