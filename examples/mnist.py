@@ -23,5 +23,5 @@ Y_test = np.expand_dims(mnist.test.labels, axis=1)
 Y_test = nn.onehot(Y_test)
 Y_test = nn.Variable(Y_test, lr=0)
 
-lenet = LeNet(X_train.value.shape, 256, 10)
-lenet.train(X_train, Y_train, X_test, Y_test, epochs=10, batchsize=100)
+lenet = LeNet(X_train.value.shape, 1024, 10)
+lenet.train(X_train, Y_train, X_test, Y_test, epochs=100, batchsize=100)

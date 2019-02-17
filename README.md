@@ -4,13 +4,19 @@
 
 ## About numpynet
 
-Numpy-net is a neural networks framework implemented by numpy. 
+Numpynet is a neural networks framework implemented by numpy. 
 Its coding style is like Gluon of mxnet. It can do derivation 
 automatically via definition of operation's backward function.  
 Now this framework supports BP network and CNN.
 
 ---
+## Performance
 
+|dataset|model|learning rate|epoch|accuracy|
+|-------|----:|------------:|----:|-------:|
+| MNIST |LeNet|  1e-3       |30   |0.9711  |
+
+---
 ## Support Component
 
 - Variable:  
@@ -88,28 +94,30 @@ python mnist.py
 `Graph` is a network definition. During `Graph` 's definition, `Variable`,`Operation`,`Layer`, `Loss Function`, `Optimizer` are just symbol, we can add them into graph.
 
 ```python
-input = Variable(UniformInit([1000, 50]), lr=0)		# input data
-output = Variable(onehot(np.random.choice(['a', 'b'], [1000, 1])), lr=0)     # output data, contain two labels
+import numpynet as nn
 
-graph = Graph()		    # Graph initial
+input = nn.Variable(nn.UniformInit([1000, 50]), lr=0)		# input data
+output = nn.Variable(nn.onehot(np.random.choice(['a', 'b'], [1000, 1])), lr=0)     # output data, contain two labels
 
-X = Placeholder()       # Add Placeholder
-W0 = Variable(UniformInit([50, 30]), lr=0.01)
+graph = nn.Graph()		    # Graph initial
+
+X = nn.Placeholder()       # Add Placeholder
+W0 = nn.Variable(nn.UniformInit([50, 30]), lr=0.01)
 graph.add_var(W0)       # Add Variable into graph
-W1 = Variable(UniformInit([30, 2]), lr=0.01)
+W1 = nn.Variable(nn.UniformInit([30, 2]), lr=0.01)
 graph.add_var(W1)
 
-FC0 = Op(Dot(), X, W0)
+FC0 = nn.Op(nn.Dot(), X, W0)
 graph.add_op(FC0)     # Add Operation into graph
 
-act0 = Layer(SigmoidActivator(), FC0)
+act0 = nn.Layer(nn.SigmoidActivator(), FC0)
 graph.add_layer(act0)   # Add Layer into graph
 
-FC1 = Op(Dot(), act0, W1)
+FC1 = nn.Op(nn.Dot(), act0, W1)
 graph.add_op(FC1)
 
-graph.add_loss(Loss(Softmax()))  	# add Loss function
-graph.add_optimizer(SGDOptimizer())	# add Optimizer
+graph.add_loss(nn.Loss(nn.Softmax()))  	# add Loss function
+graph.add_optimizer(nn.SGDOptimizer())	# add Optimizer
 ```
 
 After the definition, we can train the net
@@ -121,7 +129,6 @@ graph.backward()		# netword backward and calculate gradient
 graph.update()			# update the variable in graph.add_var by optimizer
 ```
 
-After 
 
 ---
 ### Variables
