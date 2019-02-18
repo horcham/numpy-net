@@ -52,7 +52,7 @@ Now this framework supports BP network and CNN.
   - Adam   `__init__(beta1=0.9, beta2=0.999)`
 - Models
   - LeNet 
-  - AlexNet
+  - AlexNet(without LRN)
   - VGG16
   - ResNet18
 - Examples
