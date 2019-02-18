@@ -57,6 +57,7 @@ Now this framework supports BP network and CNN.
   - ResNet18
 - Examples
   - mnist
+  - cifar-10
 ---
 
 ## Quick Start
