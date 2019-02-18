@@ -1,5 +1,5 @@
-# import numpy as np
-import minpy.numpy as np
+import numpy as np
+# import minpy.numpy as np
 from .variable import *
 from .im_col import im2col, col2im
 
