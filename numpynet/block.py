@@ -1,4 +1,5 @@
 import numpy as np
+# import minpy.numpy as np
 from .op import *
 from .variable import *
 from .layer import *
@@ -51,28 +52,32 @@ class Block(object):
 
 class ResBlock(object):
     def __init__(self, X1=None, X2s=None, scps=None):
+        self.name = 'ResBlock'
         self.X1 = X1
         self.X2s = X2s
         self.scps = scps  # short parameters
 
-        self.conv0 = Op(Conv2d(), X1, X2s[0]['w'])
-        self.bn0 = Op(BatchNorm(X2s[1]['gamma'], X2s[1]['beta']), self.conv0)
+        self.conv0 = Op(Conv2d(), X1, [X2s['w1'], X2s['b1']])
+        self.bn0 = Op(BatchNorm(X2s['gamma1'], X2s['beta1']), self.conv0)
         self.act0 = Layer(ReluActivator(), self.bn0)
-        self.conv1 = Op(Conv2d(), self.act0, X2s[2]['w'])
-        self.bn1 = Op(BatchNorm(X2s[3]['gamma'], X2s[3]['beta']), self.conv0)
+        self.conv1 = Op(Conv2d(), self.act0, [X2s['w2'], X2s['b2']])
+        self.bn1 = Op(BatchNorm(X2s['gamma2'], X2s['beta2']), self.conv0)
         self.operators = [self.conv0, self.bn0, self.act0, self.conv1, self.bn1]
 
         if scps != None:
-            self.w, self.gamma, self.beta = scps[0], scps[1], scps[2]
-            self.sc_conv0 = Op(Conv2d(), self.X1, self.w)
+            self.w, self.b, self.gamma, self.beta = scps['w'], scps['b'], scps['gamma'], scps['beta']
+            self.sc_conv0 = Op(Conv2d(), self.X1, [self.w, self.b])
             self.sc_bn = Op(BatchNorm(self.gamma, self.beta), self.sc_conv0)
 
+    def __repr__(self):
+        return self.name
+
     def forward(self, if_train=True):
-        self.output = copy.copy(self.X1)
-        self.shortcut = copy.copy(self.X1)
         for i in range(len(self.operators)):
             _op = self.operators[i]
-            self.output = _op.forward(if_train)
+            _op.forward(if_train)
+
+        self.output = copy.copy(self.operators[-1])
 
         if self.scps == None:
             self.output.value += self.X1.value
@@ -85,16 +90,18 @@ class ResBlock(object):
 
     def backward(self, nextop):
         self.nextop = nextop
-        self.D = copy.copy(nextop)
+        self._nextop = copy.copy(self.nextop)
         for i in range(len(self.operators)-1, -1, -1):
             _op = self.operators[i]
-            _op.backward(self.D)
+            _op.backward(self._nextop)
+            self._nextop = _op
+        self.D = self.operators[0].X1.D
 
         if self.scps == None:
             self.Dsc = 1
         else:
             self.sc_bn.backward(self.nextop)
-            self.sc_conv0.backward(self.sc_bn.D)
+            self.sc_conv0.backward(self.sc_bn)
             self.Dsc = self.sc_conv0.D
 
         self.D += self.Dsc

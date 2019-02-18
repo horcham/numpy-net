@@ -53,6 +53,7 @@ Now this framework supports BP network and CNN.
 - Models
   - LeNet 
   - VGG16
+  - ResNet18
 - Examples
   - mnist
 ---

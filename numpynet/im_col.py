@@ -1,4 +1,5 @@
 import numpy as np
+# import minpy.numpy as np
 import sys
 from numpynet.variable import *
 

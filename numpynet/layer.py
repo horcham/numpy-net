@@ -1,5 +1,6 @@
 # coding:utf-8
 import numpy as np
+# import minpy.numpy as np
 from .variable import *
 from .im_col import im2col, col2im
 
@@ -14,8 +15,9 @@ class Layer(object):
 	a : [samples, features], Op or Layer
 	'''
 	def __init__(self, activator, a):
-		self.a = a
+		self.X1 = self.a = a
 		self.activator = activator
+		self.name = activator.name
 
 	def __repr__(self):
 		return self.activator.name

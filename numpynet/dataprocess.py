@@ -1,4 +1,6 @@
 import numpy as np
+# import minpy.numpy as np
+import numpy as np
 from .variable import *
 
 def onehot(label):
@@ -12,11 +14,11 @@ def onehot(label):
     '''
     _label = np.unique(label)
     _labeldict = {}
-    for i in range(len(_label)):
+    for i in range(_label.shape[0]):
         _labeldict[_label[i]] = i
-    Y = np.zeros([len(label), len(_label)])
-    for i in range(len(label)):
-        Y[i, _labeldict[label[i, 0]]] = 1
+    Y = np.zeros([label.shape[0], _label.shape[0]])
+    for i in range(label.shape[0]):
+        Y[i, np.int(_labeldict[label[i, 0]])] = 1
     return Y
 
 def miniBatch(X, Y, batch_size=10):

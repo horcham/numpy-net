@@ -1,4 +1,3 @@
-import numpy as np
 import numpynet as nn
 
 class LeNet(object):
@@ -22,9 +21,9 @@ class LeNet(object):
         self.graph.add_var(WFC0)
         bFC0 = nn.Variable(nn.UniformInit([1024, 1]), lr=lr)
         self.graph.add_var(bFC0)
-        WFC1 = nn.Variable(nn.UniformInit([1024, 10]), lr=lr)
+        WFC1 = nn.Variable(nn.UniformInit([1024, num_labels]), lr=lr)
         self.graph.add_var(WFC1)
-        bFC1 = nn.Variable(nn.UniformInit([10, 1]), lr=lr)
+        bFC1 = nn.Variable(nn.UniformInit([num_labels, 1]), lr=lr)
         self.graph.add_var(bFC1)
 
         conv0 = nn.Op(nn.Conv2d(padding='valid'), self.X, [W0, b0])

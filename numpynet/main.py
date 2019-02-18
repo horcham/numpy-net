@@ -1,4 +1,5 @@
 import numpy as np
+# import minpy.numpy as np
 from op import *
 from layer import *
 from variable import *

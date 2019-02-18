@@ -1,4 +1,6 @@
 import numpy as np
+# import minpy.numpy as np
+
 import copy
 
 class Graph(object):
@@ -7,17 +9,37 @@ class Graph(object):
         self.ops = []
         self.layers = []
         self.variable = []
+        self.block = []
 
     def add_var(self, var):
         self.variable.append(var)
+
+    def add_vars(self, varlist):
+        self.variable += varlist
 
     def add_op(self, op):
         self.graph.append(op)
         self.ops.append(op)
 
+    def add_ops(self, oplist):
+        self.graph += oplist
+        self.ops += oplist
+
     def add_layer(self, layer):
         self.graph.append(layer)
         self.layers.append(layer)
+
+    def add_layers(self, layerlist):
+        self.graph += layerlist
+        self.layers += layerlist
+
+    def add_block(self, block):
+        self.graph.append(block)
+        self.layers.append(block)
+
+    def add_blocks(self, blocklist):
+        self.graph += blocklist
+        self.layers += blocklist
 
     def add_loss(self, loss):
         self.loss = loss
@@ -29,7 +51,7 @@ class Graph(object):
         for i, g in enumerate(self.graph):
             if i == 0:
                 self.graph[i].X1 = X
-            # print(i, self.graph[i])
+            # print(i, self.graph[i], self.graph[i].X1.value.shape)
             g.forward()
             # print(g.value[0])
         self.output = self.graph[-1].output

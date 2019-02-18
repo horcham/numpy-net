@@ -1,4 +1,5 @@
-import numpy as np
+# import numpy as np
+import minpy.numpy as np
 from .variable import *
 from .im_col import im2col, col2im
 
@@ -17,6 +18,7 @@ class Op(object):
         self.X1 = X1
         self.X2 = X2
         self.operator = operator
+        self.name = operator.name
 
     def __repr__(self):
         return self.operator.name

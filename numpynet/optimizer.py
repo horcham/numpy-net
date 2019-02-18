@@ -1,4 +1,5 @@
 import numpy as np
+# import minpy.numpy as np
 
 class SGDOptimizer(object):
 	def __init__(self):
