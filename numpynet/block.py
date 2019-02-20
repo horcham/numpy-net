@@ -64,10 +64,16 @@ class ResBlock(object):
         self.bn1 = Op(BatchNorm(X2s['gamma2'], X2s['beta2']), self.conv1)
         self.operators = [self.conv0, self.bn0, self.act0, self.conv1, self.bn1]
 
+
         if scps != None:
             self.w, self.b, self.gamma, self.beta = scps['w'], scps['b'], scps['gamma'], scps['beta']
             self.sc_conv0 = Op(Conv2d(), self.X1, [self.w, self.b])
             self.sc_bn = Op(BatchNorm(self.gamma, self.beta), self.sc_conv0)
+            self.sc = self.sc_bn
+        else:
+            self.sc = self.X1
+
+        self.output = Op(Add(), self.bn1, self.sc)
 
     def __repr__(self):
         return self.name
@@ -77,14 +83,12 @@ class ResBlock(object):
             _op = self.operators[i]
             _op.forward(if_train)
 
-        self.output = copy.copy(self.operators[-1])
-
         if self.scps == None:
-            self.output.value += self.X1.value
+            self.output.forward()
         else:
             self.sc_conv0.forward(if_train)
             self.sc_bn.forward(if_train)
-            self.output.value += self.sc_bn.value
+            self.output.forward()
 
         self.value = self.output.value
 

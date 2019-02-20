@@ -204,7 +204,7 @@ class BatchNorm(object):
         else:
             self.X = X
             self.mu = np.mean(X.value, axis=0)
-            # self.var = np.var(X.value, axis=0)
+            self.var = np.var(X.value, axis=0)
             # self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
             # self.bn_var = self.var * 0.1 + self.bn_var * 0.9
             self.bn_mu_temp = self.mu * 0.1 + self.bn_mu/self.N * 0.9

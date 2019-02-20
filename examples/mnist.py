@@ -32,4 +32,4 @@ Y_test = nn.Variable(Y_test, lr=0)
 
 
 res18 = ResNet18(X_train.value.shape, 512, 10)
-res18.train(X_train, Y_train, X_test, Y_test, epochs=10, batchsize=10)
+res18.train(X_train, Y_train, X_test, Y_test, epochs=10, trbatchsize=20)

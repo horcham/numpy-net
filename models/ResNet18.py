@@ -215,8 +215,8 @@ class ResNet18(object):
 
         # loss and optimizer
         self.graph.add_loss(nn.Loss(nn.Softmax()))
-        # self.graph.add_optimizer((nn.AdamOptimizer()))
-        self.graph.add_optimizer((nn.SGDOptimizer()))
+        self.graph.add_optimizer((nn.AdamOptimizer()))
+        # self.graph.add_optimizer((nn.SGDOptimizer()))
 
     def train(self, X_train, Y_train, X_test, Y_test, \
               epochs, trbatchsize=10, tebatchsize=10):
