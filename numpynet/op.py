@@ -207,9 +207,10 @@ class BatchNorm(object):
             # self.var = np.var(X.value, axis=0)
             # self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
             # self.bn_var = self.var * 0.1 + self.bn_var * 0.9
-            self.bn_mu = self.mu * 0.1 + self.bn_mu/self.N * 0.9
-            self.bn_var = self.var * 0.1 + self.bn_var/self.N * 0.9
-            self.out = (self.X.value - self.bn_mu) / np.sqrt(self.bn_var + 1e-7)
+            self.bn_mu_temp = self.mu * 0.1 + self.bn_mu/self.N * 0.9
+            self.bn_var_temp = self.var * 0.1 + self.bn_var/self.N * 0.9
+            self.out = (self.X.value - self.bn_mu_temp) / np.sqrt(self.bn_var_temp + 1e-7)
+            self.out = self.gamma.value * self.out + self.beta.value
             return Variable(self.out, lr=0)
 
     def backward(self, nextop):

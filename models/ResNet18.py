@@ -215,13 +215,14 @@ class ResNet18(object):
 
         # loss and optimizer
         self.graph.add_loss(nn.Loss(nn.Softmax()))
-        self.graph.add_optimizer((nn.AdamOptimizer()))
+        # self.graph.add_optimizer((nn.AdamOptimizer()))
+        self.graph.add_optimizer((nn.SGDOptimizer()))
 
     def train(self, X_train, Y_train, X_test, Y_test, \
-              epochs, batchsize=10):
+              epochs, trbatchsize=10, tebatchsize=10):
         for epoch in range(epochs):
-            batch_tr = nn.miniBatch(X_train, Y_train, batchsize)
-            batch_te = nn.miniBatch(X_test, Y_test, batch_size=batchsize)
+            batch_tr = nn.miniBatch(X_train, Y_train, trbatchsize)
+            batch_te = nn.miniBatch(X_test, Y_test, batch_size=tebatchsize)
             for i, (batch_x, batch_y) in enumerate(batch_tr):
                 self.graph.forward(batch_x)
                 self.graph.calc_loss(batch_y)
@@ -229,7 +230,7 @@ class ResNet18(object):
                 self.graph.update()
                 if i % 1 == 0:
                     print('epoch:{}/{}, batch:{}/{}, train loss:{}'.format(epoch, epochs, i, len(batch_tr), self.graph.loss))
-                if i % 20 == 0:
+                if i % 10 == 0:
                     accuracy = self.graph.accuracy(batch_te, batchs=10)
                     print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
                 if i % 1000 == 0 and i != 0:
