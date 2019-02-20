@@ -61,7 +61,7 @@ class ResBlock(object):
         self.bn0 = Op(BatchNorm(X2s['gamma1'], X2s['beta1']), self.conv0)
         self.act0 = Layer(ReluActivator(), self.bn0)
         self.conv1 = Op(Conv2d(), self.act0, [X2s['w2'], X2s['b2']])
-        self.bn1 = Op(BatchNorm(X2s['gamma2'], X2s['beta2']), self.conv0)
+        self.bn1 = Op(BatchNorm(X2s['gamma2'], X2s['beta2']), self.conv1)
         self.operators = [self.conv0, self.bn0, self.act0, self.conv1, self.bn1]
 
         if scps != None:

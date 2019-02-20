@@ -1,7 +1,7 @@
 import numpynet as nn
 
 class ResNet18(object):
-    def __init__(self, imagesize, flatten_size, num_labels, lr=1e-4):
+    def __init__(self, imagesize, flatten_size, num_labels, lr=1e-3):
         self.N, self.C, self.W, self.H = imagesize
         self.num_labels = num_labels
         self.lr = lr
@@ -229,6 +229,11 @@ class ResNet18(object):
                 self.graph.update()
                 if i % 1 == 0:
                     print('epoch:{}/{}, batch:{}/{}, train loss:{}'.format(epoch, epochs, i, len(batch_tr), self.graph.loss))
-            accuracy = self.graph.accuracy(batch_te)
-            print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
+                if i % 20 == 0:
+                    accuracy = self.graph.accuracy(batch_te, batchs=10)
+                    print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
+                if i % 1000 == 0 and i != 0:
+                    accuracy = self.graph.accuracy(batch_te)
+                    print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
+
 

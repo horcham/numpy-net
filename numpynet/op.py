@@ -184,6 +184,8 @@ class BatchNorm(object):
         self.beta = beta
         self.bn_mu = 0
         self.bn_var = 0
+        self.N = 0
+
     def forward(self, X, if_train):
         if if_train:
             self.X = X
@@ -192,33 +194,49 @@ class BatchNorm(object):
             self.X_norm = (X.value - self.mu)/ np.sqrt(self.var + 1e-7)
             self.out = self.gamma.value * self.X_norm + self.beta.value
 
-            self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
-            self.bn_var = self.var * 0.1 + self.bn_var * 0.9
+            # self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
+            # self.bn_var = self.var * 0.1 + self.bn_var * 0.9
+            self.bn_mu += self.mu
+            self.bn_var += self.var
+            self.N += 1
 
             return Variable(self.out, lr=0)
         else:
             self.X = X
             self.mu = np.mean(X.value, axis=0)
-            self.var = np.var(X.value, axis=0)
-            self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
-            self.bn_var = self.var * 0.1 + self.bn_var * 0.9
-            self.out = (self.X.value - self.bn_mu) / np.sqrt(self.bn_mu + 1e-7)
+            # self.var = np.var(X.value, axis=0)
+            # self.bn_mu = self.mu * 0.1 + self.bn_mu * 0.9
+            # self.bn_var = self.var * 0.1 + self.bn_var * 0.9
+            self.bn_mu = self.mu * 0.1 + self.bn_mu/self.N * 0.9
+            self.bn_var = self.var * 0.1 + self.bn_var/self.N * 0.9
+            self.out = (self.X.value - self.bn_mu) / np.sqrt(self.bn_var + 1e-7)
             return Variable(self.out, lr=0)
 
     def backward(self, nextop):
         _nextD = nextop.D
+        X_mu = self.X.value - self.mu
+        std_inv = 1.0 / np.sqrt(self.var + 1e-8)
         dhatX = _nextD * self.gamma.value
-        dvar = np.sum(dhatX * (self.X.value - self.mu), axis=0) * -1.0/2 * (self.var + 1e-7)**(-3.0/2)
-        dmu = np.sum(dhatX * (-1.0 / np.sqrt(self.var + 1e-7)), axis=0) + \
-              dvar * np.mean(-2 * (self.X.value - self.mu), axis=0)
-        dX = dhatX * 1.0 / np.sqrt(self.var + 1e-7) + \
-             dvar * 2.0 * (self.X.value - self.mu) / self.X.value.shape[0] + \
-             dmu * 1.0 / self.X.value.shape[0]
+        dvar = np.sum(dhatX * X_mu, axis=0) * -0.5 * std_inv**3
+        dmu = np.sum(dhatX * -1 * std_inv, axis=0) + dvar * np.mean(-2.0 * X_mu, axis=0)
+        dX = (dhatX * std_inv) + (dvar * 2 * X_mu / self.X.value.shape[0]) + (dmu / self.X.value.shape[0])
         dgamma = np.sum(_nextD * dhatX, axis=0)
         dbeta = np.sum(_nextD, axis=0)
         self.gamma.D = dgamma
         self.beta.D = dbeta
         self.X.D = dX
+
+        # dvar = np.sum(dhatX * (self.X.value - self.mu), axis=0) * -1.0/2 * (self.var + 1e-7)**(-3.0/2)
+        # dmu = np.sum(dhatX * (-1.0 / np.sqrt(self.var + 1e-7)), axis=0) + \
+        #       dvar * np.mean(-2 * (self.X.value - self.mu), axis=0)
+        # dX = dhatX * 1.0 / np.sqrt(self.var + 1e-7) + \
+        #      dvar * 2.0 * (self.X.value - self.mu) / self.X.value.shape[0] + \
+        #      dmu * 1.0 / self.X.value.shape[0]
+        # dgamma = np.sum(_nextD * dhatX, axis=0)
+        # dbeta = np.sum(_nextD, axis=0)
+        # self.gamma.D = dgamma
+        # self.beta.D = dbeta
+        # self.X.D = dX
 
 
 

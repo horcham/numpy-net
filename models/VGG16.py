@@ -195,8 +195,8 @@ class VGG16(object):
                 self.graph.calc_loss(batch_y)
                 self.graph.backward()
                 self.graph.update()
-                if i % 50 == 0:
-                    print('epoch:{}/{}, batch:{}/{}, train loss:{}'.format(epoch, epochs, i, len(batch_tr), self.graph.loss))
+                # if i % 50 == 0:
+                print('epoch:{}/{}, batch:{}/{}, train loss:{}'.format(epoch, epochs, i, len(batch_tr), self.graph.loss))
             accuracy = self.graph.accuracy(batch_te)
             print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
 

@@ -30,7 +30,7 @@ def readdata():
 		label = dict['labels']
 		te_Y += label
 	tr_X, te_X = np.vstack(tr_X), np.vstack(te_X)
-	tr_X, te_X = tr_X.astype(np.float32) - 127.5 , te_X.astype(np.float32) - 127.5
+	tr_X, te_X = tr_X.astype(np.float32) / 127.5 - 1.0 , te_X.astype(np.float32) / 127.5 - 1.0
 	tr_Y, te_Y = np.array(tr_Y), np.array(te_Y)
 	return tr_X, tr_Y, te_X, te_Y
 

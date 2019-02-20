@@ -84,10 +84,14 @@ class Graph(object):
         self.output = self.loss.predict(self.output)
         return self.output
 
-    def accuracy(self, batch_te):
+    def accuracy(self, batch_te, batchs=None):
         acc = 0
         totals = 0
-        for batch_x, batch_y in batch_te:
+        if batchs == None:
+            batchs = len(batch_te)
+
+        for i in range(batchs):
+            batch_x, batch_y = batch_te[i][0], batch_te[i][1]
             y_hat = self.predict(batch_x)
             y = batch_y.value
 

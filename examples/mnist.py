@@ -6,6 +6,7 @@ import sys
 import numpynet as nn
 sys.path.append('../models')
 from LeNet import LeNet
+from VGG16 import VGG16
 from ResNet18 import ResNet18
 
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=False)
@@ -28,6 +29,7 @@ Y_test = nn.Variable(Y_test, lr=0)
 
 # lenet = LeNet(X_train.value.shape, 1024, 10)
 # lenet.train(X_train, Y_train, X_test, Y_test, epochs=100, batchsize=100)
+
 
 res18 = ResNet18(X_train.value.shape, 512, 10)
 res18.train(X_train, Y_train, X_test, Y_test, epochs=10, batchsize=10)
