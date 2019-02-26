@@ -12,7 +12,7 @@ class AlexNet(object):
 		W0 = nn.Variable(nn.UniformInit([11, 11, self.C, 96]), lr=lr)
 		b0 = nn.Variable(nn.UniformInit([96, 1]), lr=lr)
 		self.graph.add_vars([W0, b0])
-		conv0 = nn.Op(nn.Conv2d(padding='SAME', stride=4), self.X, [W0, b0])
+		conv0 = nn.Op(nn.Conv2d(padding='same', stride=4), self.X, [W0, b0])
 		self.graph.add_op(conv0)
 		act0 = nn.Layer(nn.ReluActivator(), conv0)
 		self.graph.add_layer(act0)
@@ -22,7 +22,7 @@ class AlexNet(object):
 		W1 = nn.Variable(nn.UniformInit([5, 5, 96, 256]), lr=lr)
 		b1 = nn.Variable(nn.UniformInit([256, 1]), lr=lr)
 		self.graph.add_vars([W1, b1])
-		conv1 = nn.Op(nn.Conv2d(padding='SAME', stride=1), pool0, [W1, b1])
+		conv1 = nn.Op(nn.Conv2d(padding='same', stride=1), pool0, [W1, b1])
 		self.graph.add_op(conv1)
 		act1 = nn.Layer(nn.ReluActivator(), conv1)
 		self.graph.add_layer(act1)
@@ -32,7 +32,7 @@ class AlexNet(object):
 		W2 = nn.Variable(nn.UniformInit([5, 5, 256, 384]), lr=lr)
 		b2 = nn.Variable(nn.UniformInit([384, 1]), lr=lr)
 		self.graph.add_vars([W2, b2])
-		conv2 = nn.Op(nn.Conv2d(padding='SAME', stride=1), pool1, [W2, b2])
+		conv2 = nn.Op(nn.Conv2d(padding='same', stride=1), pool1, [W2, b2])
 		self.graph.add_op(conv2)
 		act2 = nn.Layer(nn.ReluActivator(), conv2)
 		self.graph.add_layer(act2)
@@ -40,7 +40,7 @@ class AlexNet(object):
 		W3 = nn.Variable(nn.UniformInit([5, 5, 384, 384]), lr=lr)
 		b3 = nn.Variable(nn.UniformInit([384, 1]), lr=lr)
 		self.graph.add_vars([W3, b3])
-		conv3 = nn.Op(nn.Conv2d(padding='SAME', stride=1), act2, [W3, b3])
+		conv3 = nn.Op(nn.Conv2d(padding='same', stride=1), act2, [W3, b3])
 		self.graph.add_op(conv3)
 		act3 = nn.Layer(nn.ReluActivator(), conv3)
 		self.graph.add_layer(act3)
@@ -48,13 +48,13 @@ class AlexNet(object):
 		W4 = nn.Variable(nn.UniformInit([5, 5, 384, 256]), lr=lr)
 		b4 = nn.Variable(nn.UniformInit([256, 1]), lr=lr)
 		self.graph.add_vars([W4, b4])
-		conv4 = nn.Op(nn.Conv2d(padding='SAME', stride=1), act3, [W4, b4])
+		conv4 = nn.Op(nn.Conv2d(padding='same', stride=1), act3, [W4, b4])
 		self.graph.add_op(conv4)
 		act4 = nn.Layer(nn.ReluActivator(), conv4)
 		self.graph.add_layer(act4)
 
 		pool5 = nn.Op(nn.MaxPooling(filter_h=3, filter_w=3, stride=2), act4)
-		self.graph.add_op(pool2)
+		self.graph.add_op(pool5)
 
 		fla = nn.Op(nn.Flatten(), pool5)
 		self.graph.add_op(fla)
@@ -101,18 +101,20 @@ class AlexNet(object):
 
 
 	def train(self, X_train, Y_train, X_test, Y_test, \
-	          epochs, batchsize=100):
+			  epochs, trbatchsize=10, tebatchsize=10):
 		for epoch in range(epochs):
-			batch_tr = nn.miniBatch(X_train, Y_train, batchsize)
-			batch_te = nn.miniBatch(X_test, Y_test, batch_size=100)
+			batch_tr = nn.miniBatch(X_train, Y_train, trbatchsize)
+			batch_te = nn.miniBatch(X_test, Y_test, batch_size=tebatchsize)
 			for i, (batch_x, batch_y) in enumerate(batch_tr):
 				self.graph.forward(batch_x)
 				self.graph.calc_loss(batch_y)
 				self.graph.backward()
 				self.graph.update()
-				if i % 50 == 0:
+				if i % 1 == 0:
 					print('epoch:{}/{}, batch:{}/{}, train loss:{}'.format(epoch, epochs, i, len(batch_tr), self.graph.loss))
-			accuracy = self.graph.accuracy(batch_te)
-			print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
-
-
+				if i % 10 == 0:
+					accuracy = self.graph.accuracy(batch_te, batchs=10)
+					print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
+				if i % 1000 == 0 and i != 0:
+					accuracy = self.graph.accuracy(batch_te)
+					print('epoch:{}, accuracy:{}'.format(epoch, accuracy))

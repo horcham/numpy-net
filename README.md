@@ -36,6 +36,8 @@ Now this framework supports BP network and CNN.
   - Maxpooling  `__init__(filter_h, filter_w, stride, pad)`, `forward(X1)`
   - Dropout `__init__(p)`, `forward(X1)`
   - BatchNorm `__init__(gamma, beta)`, `forward(X1)`
+- Block
+  - ResBlock  `__init__(X1, X2, scps)`, `forward()`
 - Activator
   - Relu   `__init__()`, `forward(X1)` 
   - Identity   `__init__()`, `forward(X1)` 
@@ -231,6 +233,78 @@ graph.add_layer(act0)
 ```
 After definition of graph, when `graph.backward` called, `gamma` and `beta` will be trained
 
+---
+### Block
+Add `Block` to graph, now `Block` just support `ResBlock`(Block in ResNet-18), the follow shows
+its construction
+```
+     |    |-------------> X or (conv --> BN)  --------------|     |
+     |    |                                                 v     |
+--------> X --> conv --> BN --> Relu --> conv --> BN -----> + ------->
+     |                                                            |
+     |                      Block                                 |
+```
+When the dimention of BN's output is different from X, the shortcut switch to `conv --> BN`, 
+otherwise `X`. 
+
+To define a `ResBlock`,  you call
+```python
+block = nn.ResBlock(X1, x2, sc)
+```
+`X1` is the output of previous `op`/`block`/`layer`. `X2` is dict, it contains the parameters
+of `conv` and `BN` in main branch. `sc` contains the parameters of
+shortcut, it is also dict.
+
+For example, when shortcut is `X`
+```python
+# Block 1
+W1_1 = nn.Variable(nn.UniformInit([3, 3, 64, 64]), lr=lr)
+b1_1 = nn.Variable(nn.UniformInit([64, 1]), lr=lr)
+gamma1_1 = nn.Variable(nn.UniformInit([1, 64, self.W, self.H]), lr=lr)
+beta1_1 = nn.Variable(nn.UniformInit([1, 64, self.W, self.H]), lr=lr)
+W1_2 = nn.Variable(nn.UniformInit([3, 3, 64, 64]), lr=lr)
+b1_2 = nn.Variable(nn.UniformInit([64, 1]), lr=lr)
+gamma1_2 = nn.Variable(nn.UniformInit([1, 64, self.W, self.H]), lr=lr)
+beta1_2 = nn.Variable(nn.UniformInit([1, 64, self.W, self.H]), lr=lr)
+self.graph.add_vars([W1_1, b1_1, gamma1_1, beta1_1, \
+                     W1_2, b1_2, gamma1_2, beta1_2])
+pamas1 = {'w1': W1_1, 'b1': b1_1, \  # the first conv in main branch
+          'gamma1': gamma1_1, 'beta1': beta1_1, \  # the first BN in main branch
+          'w2': W1_2, 'b2': b1_2, \  # the second conv in main branch
+          'gamma2': gamma1_2, 'beta2': beta1_2}    # the second BN in main branch
+          
+B1 = nn.ResBlock(act0, pamas1)
+self.graph.add_block(B1)
+``` 
+
+When shortcut comes to `conv --> BN`
+```python
+# Block 3
+W3_1 = nn.Variable(nn.UniformInit([3, 3, 64, 128]), lr=lr)
+b3_1 = nn.Variable(nn.UniformInit([128, 1]), lr=lr)
+gamma3_1 = nn.Variable(nn.UniformInit([1, 128, self.W/2, self.H/2]), lr=lr)
+beta3_1 = nn.Variable(nn.UniformInit([1, 128, self.W/2, self.H/2]), lr=lr)
+W3_2 = nn.Variable(nn.UniformInit([3, 3, 128, 128]), lr=lr)
+b3_2 = nn.Variable(nn.UniformInit([128, 1]), lr=lr)
+gamma3_2 = nn.Variable(nn.UniformInit([1, 128, self.W/2, self.H/2]), lr=lr)
+beta3_2 = nn.Variable(nn.UniformInit([1, 128, self.W/2, self.H/2]), lr=lr)
+
+w_sc3 = nn.Variable(nn.UniformInit([3, 3, 64, 128]), lr=lr)
+b_sc3 = nn.Variable(nn.UniformInit([128, 1]), lr=lr)
+gamma_sc3 = nn.Variable(nn.UniformInit([1, 128, self.W/2, self.H/2]), lr=lr)
+beta3_sc3 = nn.Variable(nn.UniformInit([1, 128, self.W/2, self.H/2]), lr=lr)
+self.graph.add_vars([W3_1, b3_1, gamma3_1, beta3_1, \
+                     W3_2, b3_2, gamma3_2, beta3_2, \
+                     w_sc3, b_sc3, gamma_sc3, beta3_sc3])
+pamas3 = {'w1': W3_1, 'b1': b3_1, \   # the first conv in main branch
+          'gamma1': gamma3_1, 'beta1': beta3_1, \  # the first BN in main branch
+          'w2': W3_2, 'b2': b3_2, \   # the second conv in main branch
+          'gamma2': gamma3_2, 'beta2': beta3_2}    # the second BN in main branch
+sc3 = {'w': w_sc3, 'b': b_sc3, \      # conv in shortcut
+        'gamma': gamma_sc3, 'beta': beta3_sc3}     # BN in shortcut
+B3 = nn.ResBlock(pool2, pamas3, sc3)
+self.graph.add_block(B3)
+```
 
 
 ---

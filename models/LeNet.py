@@ -61,20 +61,23 @@ class LeNet(object):
         self.graph.add_optimizer((nn.AdamOptimizer()))
 
     def train(self, X_train, Y_train, X_test, Y_test, \
-              epochs, batchsize=100):
+              epochs, trbatchsize=10, tebatchsize=10):
         for epoch in range(epochs):
-            batch_tr = nn.miniBatch(X_train, Y_train, batchsize)
-            batch_te = nn.miniBatch(X_test, Y_test, batch_size=100)
+            batch_tr = nn.miniBatch(X_train, Y_train, trbatchsize)
+            batch_te = nn.miniBatch(X_test, Y_test, batch_size=tebatchsize)
             for i, (batch_x, batch_y) in enumerate(batch_tr):
                 self.graph.forward(batch_x)
                 self.graph.calc_loss(batch_y)
                 self.graph.backward()
                 self.graph.update()
-                if i % 50 == 0:
+                if i % 1 == 0:
                     print('epoch:{}/{}, batch:{}/{}, train loss:{}'.format(epoch, epochs, i, len(batch_tr), self.graph.loss))
-            accuracy = self.graph.accuracy(batch_te)
-            print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
-
+                if i % 20 == 0 and i != 0:
+                    accuracy = self.graph.accuracy(batch_te, batchs=10)
+                    print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
+                if i % 1000 == 0 and i != 0:
+                    accuracy = self.graph.accuracy(batch_te)
+                    print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
 
 
 

@@ -230,8 +230,8 @@ class ResNet18(object):
                 self.graph.update()
                 if i % 1 == 0:
                     print('epoch:{}/{}, batch:{}/{}, train loss:{}'.format(epoch, epochs, i, len(batch_tr), self.graph.loss))
-                if i % 10 == 0:
-                    accuracy = self.graph.accuracy(batch_te, batchs=10)
+                if i % 100 == 0 and i != 0:
+                    accuracy = self.graph.accuracy(batch_te, batchs=20)
                     print('epoch:{}, accuracy:{}'.format(epoch, accuracy))
                 if i % 1000 == 0 and i != 0:
                     accuracy = self.graph.accuracy(batch_te)

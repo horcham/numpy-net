@@ -1,7 +1,7 @@
 import numpy as np
 # import minpy.numpy as np
-import numpy as np
 from .variable import *
+from PIL import Image
 
 def onehot(label):
     '''
@@ -29,3 +29,29 @@ def miniBatch(X, Y, batch_size=10):
         Batchs.append([Variable(X_value[i*batch_size:(i+1)*batch_size], lr=0), Variable(Y_value[i*batch_size:(i+1)*batch_size], lr=0)])
         # print(Batchs[i][0].value.shape, Batchs[i][1].value.shape)
     return Batchs
+
+
+def scaleallimage(X, shape):
+    '''
+    resize X into shape
+
+    X: [n, c, h, w] of data, np.array
+    shape: new [h, w] of image
+    '''
+    new_X = []
+    for i in range(X.shape[0]):
+        x = X[i]
+        if len(X.shape) == 4:
+            x = x.transpose([1, 2, 0])
+        x = Image.fromarray(x)
+        x = x.resize(shape)
+        x = np.array(x)
+        if len(X.shape) == 4:
+            x = x.transpose([2, 0, 1])
+        x = np.expand_dims(x, axis=0)
+        new_X.append(x)
+    return np.vstack(new_X)
+
+def randomshuffle(X, Y):
+    index = np.random.choice(len(X), len(X), replace=False)
+    return X[index], Y[index]

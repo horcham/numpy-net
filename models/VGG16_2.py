@@ -1,7 +1,7 @@
 import numpynet as nn
 
 class VGG16(object):
-    def __init__(self, imagesize, flatten_size, num_labels, lr=1e-4):
+    def __init__(self, imagesize, flatten_size, num_labels, lr=1e-3):
 
         self.N, self.C, self.W, self.H = imagesize
         self.num_labels = num_labels
@@ -154,35 +154,17 @@ class VGG16(object):
         fla = nn.Op(nn.Flatten(), pool16)
         self.graph.add_op(fla)
 
-        WFC0 = nn.Variable(nn.UniformInit([flatten_size, 4096]), lr=lr)
+        WFC0 = nn.Variable(nn.UniformInit([flatten_size, num_labels]), lr=lr)
         self.graph.add_var(WFC0)
-        bFC0 = nn.Variable(nn.UniformInit([4096, 1]), lr=lr)
+        bFC0 = nn.Variable(nn.UniformInit([num_labels, 1]), lr=lr)
         self.graph.add_var(bFC0)
         FC0 = nn.Op(nn.Dot(), fla, [WFC0, bFC0])
         self.graph.add_op(FC0)
-        Fact0 = nn.Layer(nn.ReluActivator(), FC0)
-        self.graph.add_layer(Fact0)
 
-        WFC1 = nn.Variable(nn.UniformInit([4096, 4096]), lr=lr)
-        self.graph.add_var(WFC1)
-        bFC1 = nn.Variable(nn.UniformInit([4096, 1]), lr=lr)
-        self.graph.add_var(bFC1)
-        FC1 = nn.Op(nn.Dot(), Fact0, [WFC1, bFC1])
-        self.graph.add_op(FC1)
-        Fact1 = nn.Layer(nn.ReluActivator(), FC1)
-        self.graph.add_layer(Fact1)
-
-        WFC2 = nn.Variable(nn.UniformInit([4096, num_labels]), lr=lr)
-        self.graph.add_var(WFC2)
-        bFC2 = nn.Variable(nn.UniformInit([num_labels, 1]), lr=lr)
-        self.graph.add_var(bFC2)
-        FC2 = nn.Op(nn.Dot(), Fact1, [WFC2, bFC2])
-        self.graph.add_op(FC2)
-        # Fact2 = nn.Layer(nn.ReluActivator(), FC2)
-        # self.graph.add_layer(Fact2)
 
         self.graph.add_loss(nn.Loss(nn.Softmax()))
-        self.graph.add_optimizer((nn.AdamOptimizer()))
+        # self.graph.add_optimizer((nn.AdamOptimizer()))
+        self.graph.add_optimizer((nn.MomentumOptimizer()))
 
 
     def train(self, X_train, Y_train, X_test, Y_test, \

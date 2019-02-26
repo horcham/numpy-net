@@ -51,6 +51,13 @@ class Block(object):
 
 
 class ResBlock(object):
+    '''
+		 |    |-------------> X or (conv --> BN)  --------------|     |
+		 |    |                                                 v     |
+	--------> X --> conv --> BN --> Relu --> conv --> BN -----> + ------->
+		 |                                                            |
+		 |                      Block                                 |
+		'''
     def __init__(self, X1=None, X2s=None, scps=None):
         self.name = 'ResBlock'
         self.X1 = X1
@@ -88,7 +95,7 @@ class ResBlock(object):
         else:
             self.sc_conv0.forward(if_train)
             self.sc_bn.forward(if_train)
-            self.output.forward()
+            self.output.forward(if_train)
 
         self.value = self.output.value
 
